@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/colaboradores")
+@RequestMapping(value = "/colaborador")
 public class ColaboradorController {
 
     private final ColaboradorService colaboradorService;
