@@ -2,7 +2,6 @@ package com.marlondev.stockflow.controller;
 
 import com.marlondev.stockflow.domain.Cliente;
 import com.marlondev.stockflow.services.ClienteService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
