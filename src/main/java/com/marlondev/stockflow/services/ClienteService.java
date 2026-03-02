@@ -5,6 +5,7 @@ import com.marlondev.stockflow.repositories.ClienteRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ public class ClienteService {
         this.clienteRepository = clienteRepository;
     }
 
+    @Transactional
     public void salvarCliente(Cliente cliente) {
         if(clienteRepository.findByCpf(cliente.getCpf()).isEmpty()) {
             cliente.setDataCadastro(LocalDate.now());

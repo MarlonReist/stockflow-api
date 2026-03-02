@@ -2,10 +2,13 @@ package com.marlondev.stockflow.domain;
 
 import com.marlondev.stockflow.domain.enums.StatusEnum;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Fetch;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -24,6 +27,9 @@ public class OrdemDeServico implements Serializable {
     @ManyToOne
     private Colaborador colaborador;
     private LocalDate dataFechamento;
+    //@OneToMany(fetch = FetchType.EAGER)
+    //private List<OrdemServicoItem> items = new ArrayList<>();
+
 
     public OrdemDeServico() {
     }
@@ -94,6 +100,22 @@ public class OrdemDeServico implements Serializable {
         this.dataFechamento = dataFechamento;
     }
 
+    /*public List<OrdemServicoItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrdemServicoItem> items) {
+        this.items = items;
+    }
+*/
+    /*public double getValorTotal() {
+        double sum = 0.0;
+        for (OrdemServicoItem item : items){
+            sum += item.valorTotal();
+        }
+        return sum;
+    }
+*/
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

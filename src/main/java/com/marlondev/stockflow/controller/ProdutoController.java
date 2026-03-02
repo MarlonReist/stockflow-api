@@ -1,14 +1,18 @@
 package com.marlondev.stockflow.controller;
 
 import com.marlondev.stockflow.domain.Produto;
+import com.marlondev.stockflow.dto.ProdutoRequestDTO;
+import com.marlondev.stockflow.dto.ProdutoResponseDTO;
 import com.marlondev.stockflow.services.ProdutoService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(value = "/produtos")
+@RequestMapping(value = "/produto")
 public class ProdutoController {
 
     private final ProdutoService produtoService;
@@ -18,36 +22,45 @@ public class ProdutoController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> salvarProduto(@RequestBody Produto produto) {
+    public ResponseEntity<Void> salvarProduto(@RequestBody @Valid ProdutoRequestDTO dto) {
+        Produto produto = new Produto();
+        produto.setNome(dto.getNome());
+        produto.setQuantidade(dto.getQuantidade());
+        produto.setCategoria(dto.getCategoria());
+        produto.setPreco(dto.getPreco());
         produtoService.salvarProduto(produto);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping (value = "/{id}")
-    public ResponseEntity<Produto> buscarPorId(@PathVariable Long id){
+    public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable Long id){
         Produto obj = produtoService.buscarPorId(id);
-        return ResponseEntity.ok().body(obj);
+        ProdutoResponseDTO dto = new ProdutoResponseDTO(obj);
+        return ResponseEntity.ok().body(dto);
     }
 
     @DeleteMapping (value = "/{id}")
     public ResponseEntity<String> deletarProdutoPorId(@PathVariable Long id){
         produtoService.deletarProdutoPorId(id);
-        return ResponseEntity.ok("Produto deletado! ");
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Produto>> listarTodos() {
-        List<Produto> list = produtoService.listarTodos();
-        return ResponseEntity.ok().body(list);
-    }
-
-    @PutMapping (value = "/{id}")
-    public ResponseEntity<Void> atualizarProduto(@PathVariable Long id, @RequestBody Produto produto) {
-        produto.setId(id);
-        produtoService.atualizarProduto(produto);
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping
+    public ResponseEntity<List<ProdutoResponseDTO>> listarTodos() {
+        List<Produto> list = produtoService.listarTodos();
+        List<ProdutoResponseDTO> listDto = list.stream().map(ProdutoResponseDTO:: new).collect(Collectors.toList());
+        return ResponseEntity.ok().body(listDto);
+    }
 
-
+    @PutMapping (value = "/{id}")
+    public ResponseEntity<Void> atualizarProduto(@PathVariable Long id, @RequestBody @Valid ProdutoRequestDTO dto) {
+        Produto produto = new Produto();
+        produto = produtoService.buscarPorId(id);
+        produto.setNome(dto.getNome());
+        produto.setCategoria(dto.getCategoria());
+        produto.setPreco(dto.getPreco());
+        produto.setQuantidade(dto.getQuantidade());
+        produtoService.atualizarProduto(produto);
+        return ResponseEntity.noContent().build();
+    }
 }

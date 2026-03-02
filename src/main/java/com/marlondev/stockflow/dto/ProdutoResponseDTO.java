@@ -1,36 +1,29 @@
-package com.marlondev.stockflow.domain;
+package com.marlondev.stockflow.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.marlondev.stockflow.domain.Produto;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Objects;
 
-@Entity
-public class Produto implements Serializable {
+public class ProdutoResponseDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nome;
     private Double preco;
     private String categoria;
     private Integer quantidade;
 
-    public Produto(){
+    public ProdutoResponseDTO(){
     }
 
-    public Produto(Long id, String nome, Double preco, String categoria, Integer quantidade) {
-        this.id = id;
-        this.nome = nome;
-        this.preco = preco;
-        this.categoria = categoria;
-        this.quantidade = quantidade;
+    public ProdutoResponseDTO(Produto produto) {
+        id = produto.getId();
+        nome = produto.getNome();
+        preco = produto.getPreco();
+        categoria = produto.getCategoria();
+        quantidade = produto.getQuantidade();
     }
 
     public Long getId() {
@@ -71,17 +64,5 @@ public class Produto implements Serializable {
 
     public void setQuantidade(Integer quantidade) {
         this.quantidade = quantidade;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        Produto produto = (Produto) o;
-        return Objects.equals(id, produto.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
     }
 }

@@ -1,11 +1,15 @@
 package com.marlondev.stockflow.controller;
 
 import com.marlondev.stockflow.domain.Cliente;
+import com.marlondev.stockflow.dto.ClienteRequestDTO;
+import com.marlondev.stockflow.dto.ClienteResponseDTO;
 import com.marlondev.stockflow.services.ClienteService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/cliente")
@@ -18,32 +22,44 @@ public class ClienteController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> salvarCliente(@RequestBody Cliente cliente) {
+    public ResponseEntity<Void> salvarCliente(@RequestBody @Valid ClienteRequestDTO dto) {
+        Cliente cliente = new Cliente();
+        cliente.setNome(dto.getNome());
+        cliente.setCpf(dto.getCpf());
+        cliente.setTelefone(dto.getTelefone());
+        cliente.setEmail(dto.getEmail());
         clienteService.salvarCliente(cliente);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping (value = "/{id}")
-    public ResponseEntity<Cliente> buscarPorId(@PathVariable Long id){
+    public ResponseEntity<ClienteResponseDTO> buscarPorId(@PathVariable Long id){
         Cliente obj = clienteService.buscarPorId(id);
-        return ResponseEntity.ok().body(obj);
+        ClienteResponseDTO dto = new ClienteResponseDTO(obj);
+        return ResponseEntity.ok().body(dto);
     }
 
     @DeleteMapping (value = "/{id}")
     public ResponseEntity<String> deletarClientePorId(@PathVariable Long id){
         clienteService.deletarClientePorId(id);
-        return ResponseEntity.ok("Cliente deletado! ");
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<Cliente>> listarTodos() {
+    public ResponseEntity<List<ClienteResponseDTO>> listarTodos() {
         List<Cliente> list = clienteService.listarTodos();
-        return ResponseEntity.ok().body(list);
+        List<ClienteResponseDTO> listDto = list.stream().map(ClienteResponseDTO::new).collect(Collectors.toList());
+        return ResponseEntity.ok().body(listDto);
     }
 
     @PutMapping (value = "/{id}")
-    public ResponseEntity<Void> atualizarCliente(@PathVariable Long id, @RequestBody Cliente cliente) {
+    public ResponseEntity<Void> atualizarCliente(@PathVariable Long id, @RequestBody @Valid ClienteRequestDTO dto) {
+        Cliente cliente = new Cliente();
         cliente.setId(id);
+        cliente.setNome(dto.getNome());
+        cliente.setCpf(dto.getCpf());
+        cliente.setEmail(dto.getEmail());
+        cliente.setTelefone(dto.getTelefone());
         clienteService.atualizarCliente(cliente);
         return ResponseEntity.noContent().build();
     }

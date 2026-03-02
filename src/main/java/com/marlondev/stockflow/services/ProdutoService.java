@@ -4,6 +4,7 @@ import com.marlondev.stockflow.domain.Produto;
 import com.marlondev.stockflow.repositories.ProdutoRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -40,7 +41,7 @@ public class ProdutoService {
         return produtoRepository.findAll();
     }
 
-    public void atualizarProduto(Produto produto) {
+    public void atualizarProduto(@Valid Produto produto) {
         Produto existente = produtoRepository.findById(produto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(produto.getId()));
         Produto outroProduto = produtoRepository.findByNome(produto.getNome()).orElse(null);
@@ -48,6 +49,7 @@ public class ProdutoService {
         if (outroProduto == null || outroProduto.getId().equals(existente.getId())) {
             existente.setNome(produto.getNome());
             existente.setPreco(produto.getPreco());
+            existente.setQuantidade(produto.getQuantidade());
             produtoRepository.save(existente);
         } else {
             throw new DatabaseException("Esse produto já existe");
