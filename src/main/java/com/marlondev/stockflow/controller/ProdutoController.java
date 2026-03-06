@@ -25,8 +25,6 @@ public class ProdutoController {
     public ResponseEntity<Void> salvarProduto(@RequestBody @Valid ProdutoRequestDTO dto) {
         Produto produto = new Produto();
         produto.setNome(dto.getNome());
-        produto.setQuantidade(dto.getQuantidade());
-        produto.setCategoria(dto.getCategoria());
         produto.setPreco(dto.getPreco());
         produtoService.salvarProduto(produto);
         return ResponseEntity.ok().build();
@@ -57,9 +55,7 @@ public class ProdutoController {
         Produto produto = new Produto();
         produto = produtoService.buscarPorId(id);
         produto.setNome(dto.getNome());
-        produto.setCategoria(dto.getCategoria());
         produto.setPreco(dto.getPreco());
-        produto.setQuantidade(dto.getQuantidade());
         produtoService.atualizarProduto(produto);
         return ResponseEntity.noContent().build();
     }

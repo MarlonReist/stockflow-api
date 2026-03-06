@@ -6,35 +6,34 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-@Table (name = "ordem_servico_item",
+@Table (name = "saida_item",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"ordem_de_servico_id", "produto_id"})
-        })
+        @UniqueConstraint(columnNames = {"saida_estoque_id", "produto_id"})
+    })
 @Entity
-public class OrdemServicoItem implements Serializable {
+public class SaidaItem implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ordem_de_servico_id", nullable = false)
-    private OrdemDeServico ordemDeServico;
+
+    @ManyToOne
+    @JoinColumn(name = "saida_estoque_id", nullable = false)
+    private SaidaEstoque saidaEstoque;
     @ManyToOne
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
-
     private Integer quantidade;
     private Double valorUnitario;
 
-
-    public OrdemServicoItem(){
+    public SaidaItem(){
     }
 
-    public OrdemServicoItem(Long id, OrdemDeServico ordemDeServico, Produto produto, Integer quantidade, Double valorUnitario) {
+    public SaidaItem(Long id, SaidaEstoque saidaEstoque, Produto produto, Integer quantidade, Double valorUnitario) {
         this.id = id;
-        this.ordemDeServico = ordemDeServico;
+        this.saidaEstoque = saidaEstoque;
         this.produto = produto;
         this.quantidade = quantidade;
         this.valorUnitario = valorUnitario;
@@ -48,12 +47,12 @@ public class OrdemServicoItem implements Serializable {
         this.id = id;
     }
 
-    public OrdemDeServico getOrdemDeServico() {
-        return ordemDeServico;
+    public SaidaEstoque getSaidaEstoque() {
+        return saidaEstoque;
     }
 
-    public void setOrdemDeServico(OrdemDeServico ordemDeServico) {
-        this.ordemDeServico = ordemDeServico;
+    public void setSaidaEstoque(SaidaEstoque saidaEstoque) {
+        this.saidaEstoque = saidaEstoque;
     }
 
     public Produto getProduto() {
@@ -80,13 +79,10 @@ public class OrdemServicoItem implements Serializable {
         this.valorUnitario = valorUnitario;
     }
 
-    public Double valorTotal() {
-        return quantidade * valorUnitario;
-    }
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        OrdemServicoItem that = (OrdemServicoItem) o;
+        SaidaItem that = (SaidaItem) o;
         return Objects.equals(id, that.id);
     }
 

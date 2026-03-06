@@ -6,35 +6,34 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-@Table (name = "ordem_servico_item",
+@Table (name = "transferencia_item",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"ordem_de_servico_id", "produto_id"})
-        })
+        @UniqueConstraint(columnNames = {"transferencia_id", "produto_id"})
+    })
 @Entity
-public class OrdemServicoItem implements Serializable {
+public class TransferenciaItem implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ordem_de_servico_id", nullable = false)
-    private OrdemDeServico ordemDeServico;
+
+    @ManyToOne
+    @JoinColumn(name = "transferencia_id", nullable = false)
+    private TransferenciaAlmoxarifado transferencia;
     @ManyToOne
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
-
     private Integer quantidade;
     private Double valorUnitario;
 
-
-    public OrdemServicoItem(){
+    public TransferenciaItem(){
     }
 
-    public OrdemServicoItem(Long id, OrdemDeServico ordemDeServico, Produto produto, Integer quantidade, Double valorUnitario) {
+    public TransferenciaItem(Long id, TransferenciaAlmoxarifado transferencia, Produto produto, Integer quantidade, Double valorUnitario) {
         this.id = id;
-        this.ordemDeServico = ordemDeServico;
+        this.transferencia = transferencia;
         this.produto = produto;
         this.quantidade = quantidade;
         this.valorUnitario = valorUnitario;
@@ -48,12 +47,12 @@ public class OrdemServicoItem implements Serializable {
         this.id = id;
     }
 
-    public OrdemDeServico getOrdemDeServico() {
-        return ordemDeServico;
+    public TransferenciaAlmoxarifado getTransferencia() {
+        return transferencia;
     }
 
-    public void setOrdemDeServico(OrdemDeServico ordemDeServico) {
-        this.ordemDeServico = ordemDeServico;
+    public void setTransferencia(TransferenciaAlmoxarifado transferencia) {
+        this.transferencia = transferencia;
     }
 
     public Produto getProduto() {
@@ -80,13 +79,10 @@ public class OrdemServicoItem implements Serializable {
         this.valorUnitario = valorUnitario;
     }
 
-    public Double valorTotal() {
-        return quantidade * valorUnitario;
-    }
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        OrdemServicoItem that = (OrdemServicoItem) o;
+        TransferenciaItem that = (TransferenciaItem) o;
         return Objects.equals(id, that.id);
     }
 

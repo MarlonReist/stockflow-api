@@ -19,14 +19,18 @@ public class ClienteRequestDTO {
     @Email(message =  "Formato de email inválido!")
     private String email;
 
+    @NotBlank (message = "Endereço é obrigatório!")
+    private String endereco;
+
     public ClienteRequestDTO(){
     }
 
-    public ClienteRequestDTO(String nome, String cpf, String telefone, String email) {
+    public ClienteRequestDTO(String nome, String cpf, String telefone, String email, String endereco) {
         this.nome = nome;
         this.cpf = cpf;
         this.telefone = telefone;
         this.email = email;
+        this.endereco = endereco;
     }
 
     public String getNome() {
@@ -59,5 +63,13 @@ public class ClienteRequestDTO {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco (String endereco) {
+        this.endereco = endereco;
     }
 }

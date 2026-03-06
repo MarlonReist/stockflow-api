@@ -1,15 +1,18 @@
 package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.Cliente;
+import com.marlondev.stockflow.dto.ClienteRequestDTO;
+import com.marlondev.stockflow.dto.ClienteResponseDTO;
 import com.marlondev.stockflow.repositories.ClienteRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ClienteService {
@@ -22,18 +25,19 @@ public class ClienteService {
     }
 
     @Transactional
-    public void salvarCliente(Cliente cliente) {
-        if(clienteRepository.findByCpf(cliente.getCpf()).isEmpty()) {
-            cliente.setDataCadastro(LocalDate.now());
-            clienteRepository.save(cliente);
-        } else {
+    public ClienteResponseDTO salvarCliente(Cliente cliente) {
+        if(clienteRepository.findByCpf(cliente.getCpf()).isPresent()) {
             throw new DatabaseException();
         }
+            cliente.setDataCadastro(LocalDate.now());
+            clienteRepository.save(cliente);
+            return new ClienteResponseDTO(cliente);
     }
 
-    public Cliente buscarPorId(Long id) {
-        return clienteRepository.findById(id)
+    public ClienteResponseDTO buscarPorId(Long id) {
+        Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
+        return new ClienteResponseDTO(cliente);
     }
 
     public void deletarClientePorId(Long id) {
@@ -41,22 +45,26 @@ public class ClienteService {
         clienteRepository.deleteById(id);
     }
 
-    public List<Cliente> listarTodos() {
-        return clienteRepository.findAll();
+    public List<ClienteResponseDTO> listarTodos() {
+        List<Cliente> list = clienteRepository.findAll();
+        List<ClienteResponseDTO> listDto = list.stream().map(ClienteResponseDTO::new).collect(Collectors.toList());
+        return listDto;
     }
 
-    public void atualizarCliente(Cliente cliente) {
+    public ClienteResponseDTO atualizarCliente(Cliente cliente) {
         Cliente existente = clienteRepository.findById(cliente.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(cliente.getId()));
         Cliente outroCliente = clienteRepository.findByCpf(cliente.getCpf()).orElse(null);
 
-        if (outroCliente == null || outroCliente.getId() == existente.getId()) {
+        if (outroCliente == null || outroCliente.getId().equals(existente.getId())) {
             existente.setNome(cliente.getNome());
             existente.setCpf(cliente.getCpf());
+            existente.setEndereco(cliente.getEndereco());
             existente.setTelefone(cliente.getTelefone());
             existente.setEmail(cliente.getEmail());
 
             clienteRepository.save(existente);
+            return new ClienteResponseDTO(existente);
         } else {
             throw new DatabaseException();
         }

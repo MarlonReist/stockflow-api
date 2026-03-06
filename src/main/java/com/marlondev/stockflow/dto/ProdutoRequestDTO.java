@@ -1,5 +1,6 @@
 package com.marlondev.stockflow.dto;
 
+import com.marlondev.stockflow.domain.enums.UnidadeMedida;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,18 +17,17 @@ public class ProdutoRequestDTO {
     @NotBlank(message = "Categoria é obrigatória!")
     private String categoria;
 
-    @Positive (message = "Quantidade deve ser maior que 0")
-    @Min(value = 0, message = "Quantidade não pode ser negativa!")
-    private Integer quantidade;
+    @NotNull(message = "Unidade de medida é obrigatória!")
+    private UnidadeMedida unidadeMedida;
 
     public ProdutoRequestDTO(){
     }
 
-    public ProdutoRequestDTO(String nome, Double preco, String categoria, Integer quantidade) {
+    public ProdutoRequestDTO(String nome, Double preco, String categoria, UnidadeMedida unidadeMedida) {
         this.nome = nome;
         this.preco = preco;
         this.categoria = categoria;
-        this.quantidade = quantidade;
+        this.unidadeMedida = unidadeMedida;
     }
 
     public String getNome() {
@@ -54,11 +54,11 @@ public class ProdutoRequestDTO {
         this.categoria = categoria;
     }
 
-    public Integer getQuantidade() {
-        return quantidade;
+    public UnidadeMedida getUnidadeMedida() {
+        return unidadeMedida;
     }
 
-    public void setQuantidade(Integer quantidade) {
-        this.quantidade = quantidade;
+    public void setUnidadeMedida(UnidadeMedida unidadeMedida) {
+        this.unidadeMedida = unidadeMedida;
     }
 }

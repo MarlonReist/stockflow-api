@@ -21,16 +21,18 @@ public class Cliente implements Serializable {
     private String telefone;
     private String email;
     private LocalDate dataCadastro;
+    private String endereco;
 
     public Cliente(){
     }
 
-    public Cliente(String nome, String cpf, String telefone, String email, LocalDate dataCadastro) {
+    public Cliente(String nome, String cpf, String telefone, String email, LocalDate dataCadastro, String endereco) {
         this.nome = nome;
         this.cpf = cpf;
         this.telefone = telefone;
         this.email = email;
         this.dataCadastro = dataCadastro;
+        this.endereco = endereco;
     }
 
     public Long getId() {
@@ -79,6 +81,14 @@ public class Cliente implements Serializable {
 
     public void setDataCadastro(LocalDate dataCadastro) {
         this.dataCadastro = dataCadastro;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
     }
 
     @Override

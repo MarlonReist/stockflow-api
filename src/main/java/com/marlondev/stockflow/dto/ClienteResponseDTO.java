@@ -16,6 +16,7 @@ public class ClienteResponseDTO implements Serializable {
     private String telefone;
     private String email;
     private LocalDate dataCadastro;
+    private String endereco;
 
     public ClienteResponseDTO(){
     }
@@ -27,6 +28,7 @@ public class ClienteResponseDTO implements Serializable {
         telefone = cliente.getTelefone();
         email = cliente.getEmail();
         dataCadastro = cliente.getDataCadastro();
+        endereco = cliente.getEndereco();
     }
 
     public Long getId() {
@@ -75,5 +77,13 @@ public class ClienteResponseDTO implements Serializable {
 
     public void setDataCadastro(LocalDate dataCadastro) {
         this.dataCadastro = dataCadastro;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
     }
 }

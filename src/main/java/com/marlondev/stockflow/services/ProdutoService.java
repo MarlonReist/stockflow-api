@@ -49,7 +49,6 @@ public class ProdutoService {
         if (outroProduto == null || outroProduto.getId().equals(existente.getId())) {
             existente.setNome(produto.getNome());
             existente.setPreco(produto.getPreco());
-            existente.setQuantidade(produto.getQuantidade());
             produtoRepository.save(existente);
         } else {
             throw new DatabaseException("Esse produto já existe");

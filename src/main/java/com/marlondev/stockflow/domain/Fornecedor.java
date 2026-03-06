@@ -6,22 +6,26 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-@Table(name = "colaborador")
+@Table(name = "fornecedor")
 @Entity
-public class Colaborador implements Serializable {
+public class Fornecedor implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nome;
-    @Column (unique = true)
-    private String cpf;
-    private String cargo;
-    private String telefone;
+    @Column(unique = true)
+    private String cnpj;
 
-    public Colaborador(){
+    public Fornecedor(){
+    }
+
+    public Fornecedor(Long id, String nome, String cnpj) {
+        this.id = id;
+        this.nome = nome;
+        this.cnpj = cnpj;
     }
 
     public Long getId() {
@@ -40,34 +44,18 @@ public class Colaborador implements Serializable {
         this.nome = nome;
     }
 
-    public String getCpf() {
-        return cpf;
+    public String getCnpj() {
+        return cnpj;
     }
 
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
-
-    public String getCargo() {
-        return cargo;
-    }
-
-    public void setCargo(String cargo) {
-        this.cargo = cargo;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        Colaborador that = (Colaborador) o;
+        Fornecedor that = (Fornecedor) o;
         return Objects.equals(id, that.id);
     }
 

@@ -2,7 +2,7 @@ package com.marlondev.stockflow.domain;
 
 import com.marlondev.stockflow.domain.enums.StatusEnum;
 import jakarta.persistence.*;
-import org.hibernate.annotations.Fetch;
+import org.springframework.context.annotation.Lazy;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Table(name = "ordem_de_servico")
 @Entity
 public class OrdemDeServico implements Serializable {
     @Serial
@@ -20,15 +21,18 @@ public class OrdemDeServico implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDate dataAbertura;
+    @Enumerated(value = EnumType.STRING)
     private StatusEnum status;
     private String descricao;
     @ManyToOne
+    @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
     @ManyToOne
+    @JoinColumn(name = "colaborador_id", nullable = false)
     private Colaborador colaborador;
     private LocalDate dataFechamento;
-    //@OneToMany(fetch = FetchType.EAGER)
-    //private List<OrdemServicoItem> items = new ArrayList<>();
+    @OneToMany(mappedBy = "ordemDeServico")
+    private final List<OrdemServicoItem> items = new ArrayList<>();
 
 
     public OrdemDeServico() {
@@ -100,22 +104,17 @@ public class OrdemDeServico implements Serializable {
         this.dataFechamento = dataFechamento;
     }
 
-    /*public List<OrdemServicoItem> getItems() {
+    public List<OrdemServicoItem> getItems() {
         return items;
     }
 
-    public void setItems(List<OrdemServicoItem> items) {
-        this.items = items;
-    }
-*/
-    /*public double getValorTotal() {
+    public double getValorTotal() {
         double sum = 0.0;
         for (OrdemServicoItem item : items){
             sum += item.valorTotal();
         }
         return sum;
     }
-*/
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

@@ -1,14 +1,13 @@
 package com.marlondev.stockflow.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.marlondev.stockflow.domain.enums.UnidadeMedida;
+import jakarta.persistence.*;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+@Table (name = "produto")
 @Entity
 public class Produto implements Serializable {
     @Serial
@@ -19,18 +18,21 @@ public class Produto implements Serializable {
     private Long id;
     private String nome;
     private Double preco;
-    private String categoria;
-    private Integer quantidade;
+    @ManyToOne
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private Categoria categoria;
+    @Enumerated(EnumType.STRING)
+    private UnidadeMedida unidadeMedida;
 
     public Produto(){
     }
 
-    public Produto(Long id, String nome, Double preco, String categoria, Integer quantidade) {
+    public Produto(Long id, String nome, Double preco, Categoria categoria, UnidadeMedida unidadeMedida) {
         this.id = id;
         this.nome = nome;
         this.preco = preco;
         this.categoria = categoria;
-        this.quantidade = quantidade;
+        this.unidadeMedida = unidadeMedida;
     }
 
     public Long getId() {
@@ -57,20 +59,20 @@ public class Produto implements Serializable {
         this.preco = preco;
     }
 
-    public String getCategoria() {
+    public Categoria getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(String categoria) {
+    public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
     }
 
-    public Integer getQuantidade() {
-        return quantidade;
+    public UnidadeMedida getUnidadeMedida() {
+        return unidadeMedida;
     }
 
-    public void setQuantidade(Integer quantidade) {
-        this.quantidade = quantidade;
+    public void setUnidadeMedida(UnidadeMedida unidadeMedida) {
+        this.unidadeMedida = unidadeMedida;
     }
 
     @Override
