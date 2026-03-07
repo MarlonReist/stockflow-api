@@ -43,13 +43,9 @@ public class ClienteController {
         List<ClienteResponseDTO> listDto = clienteService.listarTodos();
         return ResponseEntity.ok(listDto);
     }
-
     @PutMapping (value = "/{id}")
     public ResponseEntity<ClienteResponseDTO> atualizarCliente(@PathVariable Long id, @RequestBody @Valid ClienteRequestDTO dto) {
         ClienteResponseDTO dtoAtualizado = clienteService.atualizarCliente(id, dto);
         return ResponseEntity.ok(dtoAtualizado);
     }
-
-
-
 }

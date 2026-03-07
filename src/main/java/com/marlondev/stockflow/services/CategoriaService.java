@@ -1,17 +1,18 @@
 package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.Categoria;
-import com.marlondev.stockflow.domain.Produto;
 import com.marlondev.stockflow.dto.CategoriaRequestDTO;
 import com.marlondev.stockflow.dto.CategoriaResponseDTO;
 import com.marlondev.stockflow.repositories.CategoriaRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
@@ -37,7 +38,7 @@ public class CategoriaService {
         return new CategoriaResponseDTO(categoria);
     }
 
-    public void deletarProdutoPorId(Long id) {
+    public void deletarCategoriaPorId(Long id) {
         buscarPorId(id);
         categoriaRepository.deleteById(id);
     }
