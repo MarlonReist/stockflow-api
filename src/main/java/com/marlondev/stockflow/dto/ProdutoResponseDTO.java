@@ -1,6 +1,5 @@
 package com.marlondev.stockflow.dto;
 
-import com.marlondev.stockflow.domain.Categoria;
 import com.marlondev.stockflow.domain.Produto;
 import com.marlondev.stockflow.domain.enums.UnidadeMedida;
 
@@ -14,8 +13,9 @@ public class ProdutoResponseDTO implements Serializable {
     private Long id;
     private String nome;
     private Double preco;
-    private Categoria categoria;
     private UnidadeMedida unidadeMedida;
+    private Long categoriaId;
+    private String categoriaNome;
 
     public ProdutoResponseDTO(){
     }
@@ -24,7 +24,8 @@ public class ProdutoResponseDTO implements Serializable {
         id = produto.getId();
         nome = produto.getNome();
         preco = produto.getPreco();
-        categoria = produto.getCategoria();
+        categoriaId = produto.getCategoria().getId();
+        categoriaNome = produto.getCategoria().getNome();
         unidadeMedida = produto.getUnidadeMedida();
     }
 
@@ -52,19 +53,27 @@ public class ProdutoResponseDTO implements Serializable {
         this.preco = preco;
     }
 
-    public Categoria getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(Categoria categoria) {
-        this.categoria = categoria;
-    }
-
     public UnidadeMedida getUnidadeMedida() {
         return unidadeMedida;
     }
 
     public void setUnidadeMedida(UnidadeMedida unidadeMedida) {
         this.unidadeMedida = unidadeMedida;
+    }
+
+    public Long getCategoriaId() {
+        return categoriaId;
+    }
+
+    public void setCategoriaId(Long categoriaId) {
+        this.categoriaId = categoriaId;
+    }
+
+    public String getCategoriaNome() {
+        return categoriaNome;
+    }
+
+    public void setCategoriaNome(String categoriaNome) {
+        this.categoriaNome = categoriaNome;
     }
 }

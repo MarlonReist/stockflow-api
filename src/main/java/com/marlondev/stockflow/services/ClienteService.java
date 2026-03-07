@@ -7,7 +7,6 @@ import com.marlondev.stockflow.repositories.ClienteRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -25,13 +24,19 @@ public class ClienteService {
     }
 
     @Transactional
-    public ClienteResponseDTO salvarCliente(Cliente cliente) {
-        if(clienteRepository.findByCpf(cliente.getCpf()).isPresent()) {
+    public ClienteResponseDTO salvarCliente(ClienteRequestDTO dto) {
+        if(clienteRepository.findByCpf(dto.getCpf()).isPresent()) {
             throw new DatabaseException();
         }
-            cliente.setDataCadastro(LocalDate.now());
-            clienteRepository.save(cliente);
-            return new ClienteResponseDTO(cliente);
+        Cliente cliente = new Cliente();
+        cliente.setDataCadastro(LocalDate.now());
+        cliente.setNome(dto.getNome());
+        cliente.setCpf(dto.getCpf());
+        cliente.setTelefone(dto.getTelefone());
+        cliente.setEmail(dto.getEmail());
+        cliente.setEndereco(dto.getEndereco());
+        Cliente clienteSalvo = clienteRepository.save(cliente);
+        return new ClienteResponseDTO(clienteSalvo);
     }
 
     public ClienteResponseDTO buscarPorId(Long id) {
@@ -51,23 +56,21 @@ public class ClienteService {
         return listDto;
     }
 
-    public ClienteResponseDTO atualizarCliente(Cliente cliente) {
-        Cliente existente = clienteRepository.findById(cliente.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(cliente.getId()));
-        Cliente outroCliente = clienteRepository.findByCpf(cliente.getCpf()).orElse(null);
+    public ClienteResponseDTO atualizarCliente(Long id, ClienteRequestDTO dto) {
+        Cliente existente = clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+        Cliente outroCliente = clienteRepository.findByCpf(dto.getCpf()).orElse(null);
 
         if (outroCliente == null || outroCliente.getId().equals(existente.getId())) {
-            existente.setNome(cliente.getNome());
-            existente.setCpf(cliente.getCpf());
-            existente.setEndereco(cliente.getEndereco());
-            existente.setTelefone(cliente.getTelefone());
-            existente.setEmail(cliente.getEmail());
+            existente.setNome(dto.getNome());
+            existente.setCpf(dto.getCpf());
+            existente.setEndereco(dto.getEndereco());
+            existente.setTelefone(dto.getTelefone());
+            existente.setEmail(dto.getEmail());
 
-            clienteRepository.save(existente);
-            return new ClienteResponseDTO(existente);
-        } else {
+            Cliente clienteSalvo = clienteRepository.save(existente);
+            return new ClienteResponseDTO(clienteSalvo);
+        }
             throw new DatabaseException();
         }
     }
-
-}

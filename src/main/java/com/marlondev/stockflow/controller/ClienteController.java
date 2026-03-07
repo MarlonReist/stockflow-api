@@ -1,15 +1,14 @@
 package com.marlondev.stockflow.controller;
 
-import com.marlondev.stockflow.domain.Cliente;
 import com.marlondev.stockflow.dto.ClienteRequestDTO;
 import com.marlondev.stockflow.dto.ClienteResponseDTO;
 import com.marlondev.stockflow.services.ClienteService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/clientes")
@@ -23,14 +22,8 @@ public class ClienteController {
 
     @PostMapping
     public ResponseEntity<ClienteResponseDTO> salvarCliente(@RequestBody @Valid ClienteRequestDTO dto) {
-        Cliente cliente = new Cliente();
-        cliente.setNome(dto.getNome());
-        cliente.setCpf(dto.getCpf());
-        cliente.setTelefone(dto.getTelefone());
-        cliente.setEmail(dto.getEmail());
-        cliente.setEndereco(dto.getEndereco());
-        ClienteResponseDTO dtoSalvar = clienteService.salvarCliente(cliente);
-        return ResponseEntity.ok(dtoSalvar);
+        ClienteResponseDTO dtoSalvar = clienteService.salvarCliente(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dtoSalvar);
     }
 
     @GetMapping (value = "/{id}")
@@ -53,14 +46,7 @@ public class ClienteController {
 
     @PutMapping (value = "/{id}")
     public ResponseEntity<ClienteResponseDTO> atualizarCliente(@PathVariable Long id, @RequestBody @Valid ClienteRequestDTO dto) {
-        Cliente cliente = new Cliente();
-        cliente.setId(id);
-        cliente.setNome(dto.getNome());
-        cliente.setCpf(dto.getCpf());
-        cliente.setEmail(dto.getEmail());
-        cliente.setEndereco(dto.getEndereco());
-        cliente.setTelefone(dto.getTelefone());
-        ClienteResponseDTO dtoAtualizado = clienteService.atualizarCliente(cliente);
+        ClienteResponseDTO dtoAtualizado = clienteService.atualizarCliente(id, dto);
         return ResponseEntity.ok(dtoAtualizado);
     }
 
