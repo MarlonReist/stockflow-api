@@ -2,13 +2,15 @@ package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.Almoxarifado;
 import com.marlondev.stockflow.dto.AlmoxarifadoRequestDTO;
+import com.marlondev.stockflow.dto.AlmoxarifadoResponseDTO;
 import com.marlondev.stockflow.repositories.AlmoxarifadoRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
-import jakarta.validation.Valid;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AlmoxarifadoService {
@@ -19,15 +21,21 @@ public class AlmoxarifadoService {
         this.almoxarifadoRepository = almoxarifadoRepository;
     }
 
-    public void salvarAlmoxarifado(AlmoxarifadoRequestDTO dto) {
+    @Transactional
+    public AlmoxarifadoResponseDTO salvar(AlmoxarifadoRequestDTO dto) {
+        if (almoxarifadoRepository.findByNome(dto.getNome()).isPresent()) {
+            throw new DatabaseException("Esse Almoxarifado já existe!");
+        }
         Almoxarifado almoxarifado = new Almoxarifado();
         almoxarifado.setNome(dto.getNome());
-        almoxarifadoRepository.save(almoxarifado);
+        Almoxarifado almoxarifadoSalvo = almoxarifadoRepository.save(almoxarifado);
+        return new AlmoxarifadoResponseDTO(almoxarifadoSalvo);
     }
 
-    public Almoxarifado buscarPorId(Long id) {
-        return almoxarifadoRepository.findById(id)
+    public AlmoxarifadoResponseDTO buscarPorId(Long id) {
+        Almoxarifado almoxarifado = almoxarifadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
+        return new AlmoxarifadoResponseDTO(almoxarifado);
     }
 
     public void deletarAlmoxarifadoPorId(Long id) {
@@ -35,22 +43,23 @@ public class AlmoxarifadoService {
         almoxarifadoRepository.deleteById(id);
     }
 
-    public List<Almoxarifado> listarTodos() {
-        return almoxarifadoRepository.findAll();
+    public List<AlmoxarifadoResponseDTO> listarTodos() {
+        List<Almoxarifado> list = almoxarifadoRepository.findAll();
+        List<AlmoxarifadoResponseDTO> listDto = list.stream().map(AlmoxarifadoResponseDTO::new).collect(Collectors.toList());
+        return listDto;
     }
 
-    /*public void atualizarAlmoxarifado(@Valid Almoxarifado almoxarifado) {
-        Almoxarifado existente = almoxarifadoRepository.findById(almoxarifado.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(almoxarifado.getId()));
-        Almoxarifado outroAlmoxarifado = almoxarifadoRepository.findByNome(almoxarifado.getNome()).orElse(null);
+    @Transactional
+    public AlmoxarifadoResponseDTO atualizarAlmoxarifado(Long id, AlmoxarifadoRequestDTO dto) {
+        Almoxarifado existente = almoxarifadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+        Almoxarifado outroAlmoxarifado = almoxarifadoRepository.findByNome(dto.getNome()).orElse(null);
 
         if (outroAlmoxarifado == null || outroAlmoxarifado.getId().equals(existente.getId())) {
-            existente.setNome(almoxarifado.getNome());
-            existente.setPreco(almoxarifado.getPreco());
-            almoxarifadoRepository.save(existente);
-        } else {
-            throw new DatabaseException("Esse almoxarifado já existe");
+            existente.setNome(dto.getNome());
+            Almoxarifado almoxarifadoSalvo = almoxarifadoRepository.save(existente);
+            return new AlmoxarifadoResponseDTO(almoxarifadoSalvo);
         }
-    }
-*/
+            throw new DatabaseException("Esse almoxarifado já existe!");
+        }
 }

@@ -1,6 +1,5 @@
 package com.marlondev.stockflow.dto;
 
-import com.marlondev.stockflow.domain.enums.UnidadeMedida;
 import jakarta.validation.constraints.NotBlank;
 
 public class AlmoxarifadoRequestDTO {
