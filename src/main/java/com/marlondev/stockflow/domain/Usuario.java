@@ -66,7 +66,7 @@ public class Usuario implements Serializable {
         this.perfil = perfil;
     }
 
-    public boolean getAtivo() {
+    public boolean isAtivo() {
         return ativo;
     }
 
