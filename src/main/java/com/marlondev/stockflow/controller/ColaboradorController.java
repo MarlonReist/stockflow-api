@@ -1,19 +1,16 @@
 package com.marlondev.stockflow.controller;
 
-import com.marlondev.stockflow.domain.Colaborador;
-import com.marlondev.stockflow.dto.ClienteResponseDTO;
-import com.marlondev.stockflow.dto.ColaboradorRequestDTO;
-import com.marlondev.stockflow.dto.ColaboradorResponseDTO;
+import com.marlondev.stockflow.dto.*;
 import com.marlondev.stockflow.services.ColaboradorService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(value = "/colaborador")
+@RequestMapping(value = "/colaboradores")
 public class ColaboradorController {
 
     private final ColaboradorService colaboradorService;
@@ -23,44 +20,31 @@ public class ColaboradorController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> salvarColaborador(@RequestBody @Valid ColaboradorRequestDTO dto){
-        Colaborador colaborador = new Colaborador();
-        colaborador.setNome(dto.getNome());
-        colaborador.setCargo(dto.getCargo());
-        colaborador.setCpf(dto.getCpf());
-        colaborador.setTelefone(dto.getTelefone());
-        colaboradorService.salvarColaborador(colaborador);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<ColaboradorResponseDTO> salvarColaborador(@RequestBody @Valid ColaboradorRequestDTO dto) {
+        ColaboradorResponseDTO dtoSalvar = colaboradorService.salvarColaborador(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dtoSalvar);
     }
 
-    @GetMapping(value = "/{id}")
-    public ResponseEntity<ColaboradorResponseDTO> buscarPorId(@PathVariable Long id) {
-        Colaborador obj = colaboradorService.buscarPorId(id);
-        ColaboradorResponseDTO dto = new ColaboradorResponseDTO(obj);
-        return ResponseEntity.ok().body(dto);
+    @GetMapping (value = "/{id}")
+    public ResponseEntity<ColaboradorResponseDTO> buscarPorId(@PathVariable Long id){
+        ColaboradorResponseDTO obj = colaboradorService.buscarPorId(id);
+        return ResponseEntity.ok(obj);
     }
 
-    @DeleteMapping(value = "/{id}")
-    public ResponseEntity<String> deletarPorId(@PathVariable Long id) {
+    @DeleteMapping (value = "/{id}")
+    public ResponseEntity<Void> deletarColaboradorPorId(@PathVariable Long id){
         colaboradorService.deletarColaboradorPorId(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<ColaboradorResponseDTO>> listarTodos(){
-        List<Colaborador> list = colaboradorService.listarTodos();
-        List<ColaboradorResponseDTO> listDto = list.stream().map(ColaboradorResponseDTO::new).collect(Collectors.toList());
-        return ResponseEntity.ok().body(listDto);
+    public ResponseEntity<List<ColaboradorResponseDTO>> listarTodos() {
+        List<ColaboradorResponseDTO> listDto = colaboradorService.listarTodos();
+        return ResponseEntity.ok(listDto);
     }
-
     @PutMapping (value = "/{id}")
-    public ResponseEntity<Void> atualizarColaborador(@PathVariable Long id, @RequestBody @Valid ColaboradorRequestDTO dto) {
-        Colaborador colaborador = colaboradorService.buscarPorId(id);
-        colaborador.setNome(dto.getNome());
-        colaborador.setCpf(dto.getCpf());
-        colaborador.setCargo(dto.getCargo());
-        colaborador.setTelefone(dto.getTelefone());
-        colaboradorService.atualizarColaborador(colaborador);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ColaboradorResponseDTO> atualizarColaborador(@PathVariable Long id, @RequestBody @Valid ColaboradorRequestDTO dto) {
+        ColaboradorResponseDTO dtoAtualizado = colaboradorService.atualizarColaborador(id, dto);
+        return ResponseEntity.ok(dtoAtualizado);
     }
 }

@@ -24,6 +24,14 @@ public class Colaborador implements Serializable {
     public Colaborador(){
     }
 
+    public Colaborador(Long id, String nome, String cpf, String cargo, String telefone) {
+        this.id = id;
+        this.nome = nome;
+        this.cpf = cpf;
+        this.cargo = cargo;
+        this.telefone = telefone;
+    }
+
     public Long getId() {
         return id;
     }
