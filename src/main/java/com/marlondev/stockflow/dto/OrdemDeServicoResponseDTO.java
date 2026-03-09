@@ -8,28 +8,32 @@ import java.time.LocalDate;
 public class OrdemDeServicoResponseDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-
+    
     private Long id;
+    private LocalDate dataAbertura;
     private StatusEnum status;
     private String descricao;
-    private ClienteResponseDTO cliente;
-    private ColaboradorResponseDTO colaborador;
-    private Double valorTotal;
-    private LocalDate dataAbertura;
+    private Long clienteId;
+    private String clienteNome;
+    private Long colaboradorId;
+    private String colaboradorNome;
     private LocalDate dataFechamento;
-
+    private double valorTotal;
+    
     public OrdemDeServicoResponseDTO(){
     }
-
+    
     public OrdemDeServicoResponseDTO(OrdemDeServico os){
         id = os.getId();
+        dataAbertura = os.getDataAbertura();
         status = os.getStatus();
         descricao = os.getDescricao();
-        cliente = new ClienteResponseDTO(os.getCliente());
-        colaborador = new ColaboradorResponseDTO(os.getColaborador());
-        dataAbertura = os.getDataAbertura();
+        clienteId = os.getCliente().getId();
+        clienteNome = os.getCliente().getNome();
+        colaboradorId = os.getColaborador().getId();
+        colaboradorNome = os.getColaborador().getNome();
         dataFechamento = os.getDataFechamento();
-        //valorTotal = os.getValorTotal();
+        valorTotal = os.getValorTotal();
     }
 
     public Long getId() {
@@ -38,6 +42,14 @@ public class OrdemDeServicoResponseDTO implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public LocalDate getDataAbertura() {
+        return dataAbertura;
+    }
+
+    public void setDataAbertura(LocalDate dataAbertura) {
+        this.dataAbertura = dataAbertura;
     }
 
     public StatusEnum getStatus() {
@@ -56,27 +68,51 @@ public class OrdemDeServicoResponseDTO implements Serializable {
         this.descricao = descricao;
     }
 
-    public ClienteResponseDTO getCliente() {
-        return cliente;
+    public Long getClienteId() {
+        return clienteId;
     }
 
-    public void setCliente(ClienteResponseDTO cliente) {
-        this.cliente = cliente;
+    public void setClienteId(Long clienteId) {
+        this.clienteId = clienteId;
     }
 
-    public ColaboradorResponseDTO getColaborador() {
-        return colaborador;
+    public String getClienteNome() {
+        return clienteNome;
     }
 
-    public void setColaborador(ColaboradorResponseDTO colaborador) {
-        this.colaborador = colaborador;
+    public void setClienteNome(String clienteNome) {
+        this.clienteNome = clienteNome;
     }
 
-    public Double getValorTotal() {
+    public Long getColaboradorId() {
+        return colaboradorId;
+    }
+
+    public void setColaboradorId(Long colaboradorId) {
+        this.colaboradorId = colaboradorId;
+    }
+
+    public String getColaboradorNome() {
+        return colaboradorNome;
+    }
+
+    public void setColaboradorNome(String colaboradorNome) {
+        this.colaboradorNome = colaboradorNome;
+    }
+
+    public LocalDate getDataFechamento() {
+        return dataFechamento;
+    }
+
+    public void setDataFechamento(LocalDate dataFechamento) {
+        this.dataFechamento = dataFechamento;
+    }
+
+    public double getValorTotal() {
         return valorTotal;
     }
 
-    public void setValorTotal(Double valorTotal) {
+    public void setValorTotal(double valorTotal) {
         this.valorTotal = valorTotal;
     }
 }

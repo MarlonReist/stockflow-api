@@ -2,7 +2,6 @@ package com.marlondev.stockflow.domain;
 
 import com.marlondev.stockflow.domain.enums.StatusEnum;
 import jakarta.persistence.*;
-import org.springframework.context.annotation.Lazy;
 
 import java.io.Serial;
 import java.io.Serializable;
