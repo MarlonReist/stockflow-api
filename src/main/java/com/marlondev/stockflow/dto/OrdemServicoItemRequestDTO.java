@@ -1,4 +1,4 @@
-/*package com.marlondev.stockflow.dto;
+package com.marlondev.stockflow.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -6,29 +6,26 @@ import jakarta.validation.constraints.Positive;
 public class OrdemServicoItemRequestDTO {
 
     @NotNull(message = "Id da ordem de serviço é obrigatório!")
-    @Positive
     private Long osId;
 
     @NotNull(message = "Id do produto é obrigatório!")
-    @Positive
     private Long produtoId;
+
+    @NotNull(message = "Almoxarifado é obrigatório!")
+    private Long almoxarifadoId;
 
     @NotNull(message = "Quantidade é obrigatória!")
     @Positive(message = "Quantidade deve ser maior que 0!")
     private Integer quantidade;
 
-    @NotNull(message = "Valor Unitário é obrigatório!")
-    @Positive (message = "Valor Unitário deve ser maior que 0!")
-    private Double valorUnitario;
-
     public OrdemServicoItemRequestDTO() {
     }
 
-    public OrdemServicoItemRequestDTO(Long osId, Long produtoId, Integer quantidade, Double valorUnitario) {
+    public OrdemServicoItemRequestDTO(Long osId, Long produtoId, Long almoxarifadoId, Integer quantidade) {
         this.osId = osId;
         this.produtoId = produtoId;
+        this.almoxarifadoId = almoxarifadoId;
         this.quantidade = quantidade;
-        this.valorUnitario = valorUnitario;
     }
 
     public Long getOsId() {
@@ -47,6 +44,14 @@ public class OrdemServicoItemRequestDTO {
         this.produtoId = produtoId;
     }
 
+    public Long getAlmoxarifadoId() {
+        return almoxarifadoId;
+    }
+
+    public void setAlmoxarifadoId(Long almoxarifadoId) {
+        this.almoxarifadoId = almoxarifadoId;
+    }
+
     public Integer getQuantidade() {
         return quantidade;
     }
@@ -54,13 +59,4 @@ public class OrdemServicoItemRequestDTO {
     public void setQuantidade(Integer quantidade) {
         this.quantidade = quantidade;
     }
-
-    public Double getValorUnitario() {
-        return valorUnitario;
-    }
-
-    public void setValorUnitario(Double valorUnitario) {
-        this.valorUnitario = valorUnitario;
-    }
 }
-*/

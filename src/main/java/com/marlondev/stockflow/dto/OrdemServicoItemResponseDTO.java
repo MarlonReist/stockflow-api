@@ -1,6 +1,7 @@
-/*
+
 package com.marlondev.stockflow.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.marlondev.stockflow.domain.OrdemServicoItem;
 
 import java.io.Serial;
@@ -11,20 +12,27 @@ public class OrdemServicoItemResponseDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long id;
-    private OrdemDeServicoResponseDTO os;
-    private ProdutoResponseDTO produto;
+    private Long osId;
+    private Long produtoId;
+    private String produtoNome;
     private Integer quantidade;
     private Double valorUnitario;
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER, pattern = "#.00")
+    private Double valorTotal;
+    private Long almoxarifadoId;
 
-    public OrdemServicoItemResponseDTO(){
+    public OrdemServicoItemResponseDTO() {
     }
 
-    public OrdemServicoItemResponseDTO(OrdemServicoItem ordemItem){
+    public OrdemServicoItemResponseDTO(OrdemServicoItem ordemItem) {
         id = ordemItem.getId();
-        os = new OrdemDeServicoResponseDTO(ordemItem.getOrdemDeServico());
-        produto = new ProdutoResponseDTO(ordemItem.getProduto());
+        osId = ordemItem.getOrdemDeServico().getId();
+        produtoId = ordemItem.getProduto().getId();
+        produtoNome = ordemItem.getProduto().getNome();
         quantidade = ordemItem.getQuantidade();
         valorUnitario = ordemItem.getValorUnitario();
+        valorTotal = ordemItem.valorTotal();
+        almoxarifadoId = ordemItem.getAlmoxarifado().getId();
     }
 
     public Long getId() {
@@ -35,20 +43,28 @@ public class OrdemServicoItemResponseDTO implements Serializable {
         this.id = id;
     }
 
-    public OrdemDeServicoResponseDTO getOs() {
-        return os;
+    public Long getOsId() {
+        return osId;
     }
 
-    public void setOrdemDeServico(OrdemDeServicoResponseDTO os) {
-        this.os = os;
+    public void setOsId(Long osId) {
+        this.osId = osId;
     }
 
-    public ProdutoResponseDTO getProduto() {
-        return produto;
+    public Long getProdutoId() {
+        return produtoId;
     }
 
-    public void setProduto(ProdutoResponseDTO produto) {
-        this.produto = produto;
+    public void setProdutoId(Long produtoId) {
+        this.produtoId = produtoId;
+    }
+
+    public String getProdutoNome() {
+        return produtoNome;
+    }
+
+    public void setProdutoNome(String produtoNome) {
+        this.produtoNome = produtoNome;
     }
 
     public Integer getQuantidade() {
@@ -66,5 +82,20 @@ public class OrdemServicoItemResponseDTO implements Serializable {
     public void setValorUnitario(Double valorUnitario) {
         this.valorUnitario = valorUnitario;
     }
+
+    public Double getValorTotal() {
+        return valorTotal;
+    }
+
+    public void setValorTotal(Double valorTotal) {
+        this.valorTotal = valorTotal;
+    }
+
+    public Long getAlmoxarifadoId() {
+        return almoxarifadoId;
+    }
+
+    public void setAlmoxarifadoId(Long almoxarifadoId) {
+        this.almoxarifadoId = almoxarifadoId;
+    }
 }
-*/

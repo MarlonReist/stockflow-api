@@ -6,10 +6,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-@Table (name = "ordem_servico_item",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"ordem_de_servico_id", "produto_id"})
-        })
+@Table (name = "ordem_servico_item")
 @Entity
 public class OrdemServicoItem implements Serializable {
     @Serial
@@ -21,6 +18,10 @@ public class OrdemServicoItem implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ordem_de_servico_id", nullable = false)
     private OrdemDeServico ordemDeServico;
+
+    @ManyToOne
+    @JoinColumn(name = "almoxarifado_id", nullable = false)
+    private Almoxarifado almoxarifado;
     @ManyToOne
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
@@ -32,12 +33,13 @@ public class OrdemServicoItem implements Serializable {
     public OrdemServicoItem(){
     }
 
-    public OrdemServicoItem(Long id, OrdemDeServico ordemDeServico, Produto produto, Integer quantidade, Double valorUnitario) {
+    public OrdemServicoItem(Long id, OrdemDeServico ordemDeServico, Produto produto, Integer quantidade, Double valorUnitario, Almoxarifado almoxarifado) {
         this.id = id;
         this.ordemDeServico = ordemDeServico;
         this.produto = produto;
         this.quantidade = quantidade;
         this.valorUnitario = valorUnitario;
+        this.almoxarifado = almoxarifado;
     }
 
     public Long getId() {
@@ -78,6 +80,14 @@ public class OrdemServicoItem implements Serializable {
 
     public void setValorUnitario(Double valorUnitario) {
         this.valorUnitario = valorUnitario;
+    }
+
+    public Almoxarifado getAlmoxarifado() {
+        return almoxarifado;
+    }
+
+    public void setAlmoxarifado(Almoxarifado almoxarifado) {
+        this.almoxarifado = almoxarifado;
     }
 
     public Double valorTotal() {
