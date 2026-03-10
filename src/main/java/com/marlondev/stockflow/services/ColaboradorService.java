@@ -49,8 +49,7 @@ public class ColaboradorService {
 
     public List<ColaboradorResponseDTO> listarTodos(){
         List<Colaborador> list = colaboradorRepository.findAll();
-        List<ColaboradorResponseDTO> listDto = list.stream().map(ColaboradorResponseDTO::new).collect(Collectors.toList());
-        return listDto;
+        return list.stream().map(ColaboradorResponseDTO::new).collect(Collectors.toList());
     }
 
     @Transactional

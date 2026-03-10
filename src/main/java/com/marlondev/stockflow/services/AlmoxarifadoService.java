@@ -45,8 +45,7 @@ public class AlmoxarifadoService {
 
     public List<AlmoxarifadoResponseDTO> listarTodos() {
         List<Almoxarifado> list = almoxarifadoRepository.findAll();
-        List<AlmoxarifadoResponseDTO> listDto = list.stream().map(AlmoxarifadoResponseDTO::new).collect(Collectors.toList());
-        return listDto;
+        return list.stream().map(AlmoxarifadoResponseDTO::new).collect(Collectors.toList());
     }
 
     @Transactional

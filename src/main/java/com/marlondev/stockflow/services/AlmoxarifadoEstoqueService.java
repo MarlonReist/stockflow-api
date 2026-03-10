@@ -65,8 +65,7 @@ public class AlmoxarifadoEstoqueService {
 
     public List<AlmoxarifadoEstoqueResponseDTO> listarTodos(){
         List<AlmoxarifadoEstoque> list = almoxarifadoEstoqueRepository.findAll();
-        List<AlmoxarifadoEstoqueResponseDTO> listDto = list.stream().map(AlmoxarifadoEstoqueResponseDTO::new).collect(Collectors.toList());
-        return listDto;
+        return list.stream().map(AlmoxarifadoEstoqueResponseDTO::new).collect(Collectors.toList());
     }
 
     public AlmoxarifadoEstoqueResponseDTO atualizarEstoque(Long id, AlmoxarifadoEstoqueRequestDTO dto){

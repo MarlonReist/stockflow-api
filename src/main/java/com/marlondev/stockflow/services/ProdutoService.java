@@ -55,8 +55,7 @@ public class ProdutoService {
 
     public List<ProdutoResponseDTO> listarTodos() {
         List<Produto> list = produtoRepository.findAll();
-        List<ProdutoResponseDTO> listDto = list.stream().map(ProdutoResponseDTO::new).collect(Collectors.toList());
-        return listDto;
+        return list.stream().map(ProdutoResponseDTO::new).collect(Collectors.toList());
     }
 
     public ProdutoResponseDTO atualizarProduto(Long id, ProdutoRequestDTO dto) {

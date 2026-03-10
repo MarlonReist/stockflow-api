@@ -1,5 +1,6 @@
 package com.marlondev.stockflow.domain;
 
+import com.marlondev.stockflow.domain.enums.StatusEnum;
 import jakarta.persistence.*;
 
 import java.io.Serial;
@@ -25,6 +26,8 @@ public class EntradaEstoque implements Serializable {
     @JoinColumn (name = "almoxarifado_id", nullable = false)
     private Almoxarifado almoxarifado;
     private LocalDate dataEntrada;
+    @Enumerated(EnumType.STRING)
+    private StatusEnum status;
 
     @OneToMany (mappedBy = "entradaEstoque")
     private final List<EntradaItem> itens = new ArrayList<>();
@@ -32,11 +35,12 @@ public class EntradaEstoque implements Serializable {
     public EntradaEstoque(){
     }
 
-    public EntradaEstoque(Long id, Fornecedor fornecedor, LocalDate dataEntrada, Almoxarifado almoxarifado) {
+    public EntradaEstoque(Long id, Fornecedor fornecedor, LocalDate dataEntrada, Almoxarifado almoxarifado, StatusEnum status) {
         this.id = id;
         this.fornecedor = fornecedor;
         this.dataEntrada = dataEntrada;
         this.almoxarifado = almoxarifado;
+        this.status = status;
     }
 
     public Long getId() {
@@ -69,6 +73,14 @@ public class EntradaEstoque implements Serializable {
 
     public void setAlmoxarifado(Almoxarifado almoxarifado) {
         this.almoxarifado = almoxarifado;
+    }
+
+    public StatusEnum getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusEnum status) {
+        this.status = status;
     }
 
     public List<EntradaItem> getItens() {

@@ -48,8 +48,7 @@ public class UsuarioService {
 
     public List<UsuarioResponseDTO> listarTodos() {
         List<Usuario> list = usuarioRepository.findAll();
-        List<UsuarioResponseDTO> listDto = list.stream().map(UsuarioResponseDTO::new).collect(Collectors.toList());
-        return listDto;
+        return list.stream().map(UsuarioResponseDTO::new).collect(Collectors.toList());
     }
 
     public UsuarioResponseDTO desativarUsuario(Long id) {

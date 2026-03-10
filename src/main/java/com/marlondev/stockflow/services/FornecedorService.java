@@ -46,8 +46,7 @@ public class FornecedorService {
 
     public List<FornecedorResponseDTO> listarTodos(){
         List<Fornecedor> list = fornecedorRepository.findAll();
-        List<FornecedorResponseDTO> listDto = list.stream().map(FornecedorResponseDTO::new).collect(Collectors.toList());
-        return listDto;
+        return list.stream().map(FornecedorResponseDTO::new).collect(Collectors.toList());
     }
 
     public FornecedorResponseDTO atualizarFornecedor(Long id, FornecedorRequestDTO dto){

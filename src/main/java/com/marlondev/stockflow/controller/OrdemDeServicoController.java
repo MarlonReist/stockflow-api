@@ -43,19 +43,19 @@ public class OrdemDeServicoController {
         return ResponseEntity.ok().body(listDto);
     }
 
-    @PatchMapping(value = "/{id}/descricao")
+    @PutMapping(value = "/{id}/descricao")
     public ResponseEntity<OrdemDeServicoResponseDTO> atualizarDescricao(@PathVariable Long id, @RequestBody @Valid OrdemDeServicoRequestDTO dto) {
         OrdemDeServicoResponseDTO descricaoAtualizada = osService.atualizarDescricao(id, dto);
         return ResponseEntity.ok().body(descricaoAtualizada);
     }
 
-    @PutMapping (value = "/{id}/finalizar")
+    @PatchMapping (value = "/{id}/finalizar")
     public ResponseEntity<OrdemDeServicoResponseDTO> finalizarOs(@PathVariable Long id) {
         OrdemDeServicoResponseDTO osFinalizada = osService.finalizarOs(id);
         return ResponseEntity.ok().body(osFinalizada);
     }
 
-    @PutMapping (value = "/{id}/cancelar")
+    @PatchMapping (value = "/{id}/cancelar")
     public ResponseEntity<OrdemDeServicoResponseDTO> cancelarOs(@PathVariable Long id) {
         OrdemDeServicoResponseDTO osCancelada = osService.cancelarOs(id);
         return ResponseEntity.ok().body(osCancelada);

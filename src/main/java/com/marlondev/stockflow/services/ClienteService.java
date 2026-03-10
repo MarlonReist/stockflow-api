@@ -52,8 +52,7 @@ public class ClienteService {
 
     public List<ClienteResponseDTO> listarTodos() {
         List<Cliente> list = clienteRepository.findAll();
-        List<ClienteResponseDTO> listDto = list.stream().map(ClienteResponseDTO::new).collect(Collectors.toList());
-        return listDto;
+        return list.stream().map(ClienteResponseDTO::new).collect(Collectors.toList());
     }
 
     public ClienteResponseDTO atualizarCliente(Long id, ClienteRequestDTO dto) {

@@ -45,8 +45,7 @@ public class CategoriaService {
 
     public List<CategoriaResponseDTO> listarTodos() {
         List<Categoria> list = categoriaRepository.findAll();
-        List<CategoriaResponseDTO> listDto = list.stream().map(CategoriaResponseDTO::new).collect(Collectors.toList());
-        return listDto;
+        return list.stream().map(CategoriaResponseDTO::new).collect(Collectors.toList());
     }
 
     public CategoriaResponseDTO atualizarCategoria(Long id, CategoriaRequestDTO dto) {

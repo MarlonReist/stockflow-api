@@ -64,8 +64,7 @@ public class OrdemDeServicoService {
 
     public List<OrdemDeServicoResponseDTO> listarTodos() {
         List<OrdemDeServico> list = ordemDeServicoRepository.findAll();
-        List<OrdemDeServicoResponseDTO> listDto = list.stream().map(OrdemDeServicoResponseDTO::new).collect(Collectors.toList());
-        return listDto;
+        return list.stream().map(OrdemDeServicoResponseDTO::new).collect(Collectors.toList());
     }
 
     @Transactional
