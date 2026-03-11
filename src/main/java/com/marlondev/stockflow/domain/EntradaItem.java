@@ -6,10 +6,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-@Table (name = "entrada_item",
-        uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"entrada_estoque_id", "produto_id"})
-    })
+@Table (name = "entrada_item")
 @Entity
 public class EntradaItem implements Serializable {
     @Serial
@@ -77,6 +74,10 @@ public class EntradaItem implements Serializable {
 
     public void setValorUnitario(Double valorUnitario) {
         this.valorUnitario = valorUnitario;
+    }
+
+    public Double valorTotal() {
+        return quantidade * valorUnitario;
     }
 
     @Override
