@@ -1,5 +1,6 @@
 package com.marlondev.stockflow.domain;
 
+import com.marlondev.stockflow.domain.enums.StatusEnum;
 import jakarta.persistence.*;
 
 import java.io.Serial;
@@ -22,6 +23,8 @@ public class SaidaEstoque implements Serializable {
     @ManyToOne
     @JoinColumn(name = "almoxarifado_id", nullable = false)
     private Almoxarifado almoxarifado;
+    @Enumerated(EnumType.STRING)
+    private StatusEnum status;
 
     @OneToMany(mappedBy = "saidaEstoque")
     private final List<SaidaItem> itens = new ArrayList<>();
@@ -29,10 +32,11 @@ public class SaidaEstoque implements Serializable {
     public SaidaEstoque(){
     }
 
-    public SaidaEstoque(Long id, LocalDate dataSaida, Almoxarifado almoxarifado) {
+    public SaidaEstoque(Long id, LocalDate dataSaida, Almoxarifado almoxarifado, StatusEnum status) {
         this.id = id;
         this.dataSaida = dataSaida;
         this.almoxarifado = almoxarifado;
+        this.status = status;
     }
 
     public Long getId() {
@@ -59,9 +63,18 @@ public class SaidaEstoque implements Serializable {
         this.almoxarifado = almoxarifado;
     }
 
+    public StatusEnum getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusEnum status) {
+        this.status = status;
+    }
+
     public List<SaidaItem> getItens() {
         return itens;
     }
+
 
     @Override
     public boolean equals(Object o) {
