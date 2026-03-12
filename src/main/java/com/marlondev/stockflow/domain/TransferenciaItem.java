@@ -6,10 +6,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-@Table (name = "transferencia_item",
-        uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"transferencia_id", "produto_id"})
-    })
+@Table (name = "transferencia_item")
 @Entity
 public class TransferenciaItem implements Serializable {
     @Serial

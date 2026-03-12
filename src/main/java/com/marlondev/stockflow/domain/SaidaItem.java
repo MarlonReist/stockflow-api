@@ -6,10 +6,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-@Table (name = "saida_item",
-        uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"saida_estoque_id", "produto_id"})
-    })
+@Table (name = "saida_item")
 @Entity
 public class SaidaItem implements Serializable {
     @Serial
