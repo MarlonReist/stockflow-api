@@ -6,6 +6,7 @@ import com.marlondev.stockflow.dto.TransferenciaAlmoxarifadoRequestDTO;
 import com.marlondev.stockflow.dto.TransferenciaAlmoxarifadoResponseDTO;
 import com.marlondev.stockflow.repositories.AlmoxarifadoRepository;
 import com.marlondev.stockflow.repositories.TransferenciaAlmoxarifadoRepository;
+import com.marlondev.stockflow.repositories.TransferenciaItemRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
@@ -20,10 +21,12 @@ public class TransferenciaAlmoxarifadoService {
 
     public final TransferenciaAlmoxarifadoRepository transferenciaAlmoxarifadoRepository;
     public final AlmoxarifadoRepository almoxarifadoRepository;
+    public final TransferenciaItemRepository transferenciaRepository;
 
-    public TransferenciaAlmoxarifadoService(TransferenciaAlmoxarifadoRepository transferenciaAlmoxarifadoRepository, AlmoxarifadoRepository almoxarifadoRepository) {
+    public TransferenciaAlmoxarifadoService(TransferenciaAlmoxarifadoRepository transferenciaAlmoxarifadoRepository, AlmoxarifadoRepository almoxarifadoRepository, TransferenciaItemRepository transferenciaRepository) {
         this.transferenciaAlmoxarifadoRepository = transferenciaAlmoxarifadoRepository;
         this.almoxarifadoRepository = almoxarifadoRepository;
+        this.transferenciaRepository = transferenciaRepository;
     }
 
     @Transactional
@@ -57,6 +60,9 @@ public class TransferenciaAlmoxarifadoService {
     public void deletarPorId(Long id){
         TransferenciaAlmoxarifado buscarTransf = transferenciaAlmoxarifadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
+        if(transferenciaRepository.existsByTransferenciaId(id)){
+            throw new DatabaseException("Não é possível excluir uma transferência com produtos!");
+        }
         transferenciaAlmoxarifadoRepository.deleteById(id);
     }
 

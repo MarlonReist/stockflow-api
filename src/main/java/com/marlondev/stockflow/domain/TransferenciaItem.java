@@ -23,17 +23,15 @@ public class TransferenciaItem implements Serializable {
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
     private Integer quantidade;
-    private Double valorUnitario;
 
     public TransferenciaItem(){
     }
 
-    public TransferenciaItem(Long id, TransferenciaAlmoxarifado transferencia, Produto produto, Integer quantidade, Double valorUnitario) {
+    public TransferenciaItem(Long id, TransferenciaAlmoxarifado transferencia, Produto produto, Integer quantidade) {
         this.id = id;
         this.transferencia = transferencia;
         this.produto = produto;
         this.quantidade = quantidade;
-        this.valorUnitario = valorUnitario;
     }
 
     public Long getId() {
@@ -66,14 +64,6 @@ public class TransferenciaItem implements Serializable {
 
     public void setQuantidade(Integer quantidade) {
         this.quantidade = quantidade;
-    }
-
-    public Double getValorUnitario() {
-        return valorUnitario;
-    }
-
-    public void setValorUnitario(Double valorUnitario) {
-        this.valorUnitario = valorUnitario;
     }
 
     @Override
