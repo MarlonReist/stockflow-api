@@ -25,12 +25,14 @@ public class SaidaItemService {
     private final SaidaEstoqueRepository saidaEstoqueRepository;
     private final ProdutoRepository produtoRepository;
     private final AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository;
+    private final MovimentacaoEstoqueService movimentacaoEstoqueService;
 
-    public SaidaItemService(SaidaItemRepository saidaItemRepository, SaidaEstoqueRepository saidaEstoqueRepository, ProdutoRepository produtoRepository, AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository) {
+    public SaidaItemService(SaidaItemRepository saidaItemRepository, SaidaEstoqueRepository saidaEstoqueRepository, ProdutoRepository produtoRepository, AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository, MovimentacaoEstoqueService movimentacaoEstoqueService) {
         this.saidaItemRepository = saidaItemRepository;
         this.saidaEstoqueRepository = saidaEstoqueRepository;
         this.produtoRepository = produtoRepository;
         this.almoxarifadoEstoqueRepository = almoxarifadoEstoqueRepository;
+        this.movimentacaoEstoqueService = movimentacaoEstoqueService;
     }
 
     @Transactional
@@ -67,6 +69,7 @@ public class SaidaItemService {
             throw new DatabaseException("Não existe estoque desse produto nesse almoxarifado!");
     }
         SaidaItem saidaItemSalva = saidaItemRepository.save(saidaItem);
+        movimentacaoEstoqueService.registrarSaida(saidaItemSalva);
         return new SaidaItemResponseDTO(saidaItemSalva);
     }
 

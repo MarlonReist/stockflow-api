@@ -22,12 +22,14 @@ public class EntradaItemService {
     private final EntradaEstoqueRepository entradaEstoqueRepository;
     private final ProdutoRepository produtoRepository;
     private final AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository;
+    private final MovimentacaoEstoqueService movimentacaoEstoqueService;
 
-    public EntradaItemService(EntradaItemRepository entradaItemRepository, EntradaEstoqueRepository entradaEstoqueRepository, ProdutoRepository produtoRepository, AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository) {
+    public EntradaItemService(EntradaItemRepository entradaItemRepository, EntradaEstoqueRepository entradaEstoqueRepository, ProdutoRepository produtoRepository, AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository, MovimentacaoEstoqueService movimentacaoEstoqueService) {
         this.entradaItemRepository = entradaItemRepository;
         this.entradaEstoqueRepository = entradaEstoqueRepository;
         this.produtoRepository = produtoRepository;
         this.almoxarifadoEstoqueRepository = almoxarifadoEstoqueRepository;
+        this.movimentacaoEstoqueService = movimentacaoEstoqueService;
     }
 
     @Transactional
@@ -65,6 +67,7 @@ public class EntradaItemService {
             almoxarifadoEstoqueRepository.save(novoEstoque);
         }
         EntradaItem entradaItemSalva = entradaItemRepository.save(entradaItem);
+        movimentacaoEstoqueService.registrarEntrada(entradaItemSalva);
         return new EntradaItemResponseDTO(entradaItemSalva);
     }
 

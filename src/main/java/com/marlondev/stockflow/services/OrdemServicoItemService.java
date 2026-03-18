@@ -22,13 +22,15 @@ public class OrdemServicoItemService {
     private final ProdutoRepository produtoRepository;
     private final AlmoxarifadoEstoqueRepository estoqueRepository;
     private final AlmoxarifadoRepository almoxarifadoRepository;
+    private final MovimentacaoEstoqueService movimentacaoEstoqueService;
 
-    public OrdemServicoItemService(OrdemServicoItemRepository ordemItemRepository, OrdemDeServicoRepository ordemDeServicoRepository, ProdutoRepository produtoRepository, AlmoxarifadoEstoqueRepository estoqueRepository, AlmoxarifadoRepository almoxarifadoRepository) {
+    public OrdemServicoItemService(OrdemServicoItemRepository ordemItemRepository, OrdemDeServicoRepository ordemDeServicoRepository, ProdutoRepository produtoRepository, AlmoxarifadoEstoqueRepository estoqueRepository, AlmoxarifadoRepository almoxarifadoRepository, MovimentacaoEstoqueService movimentacaoEstoqueService) {
         this.ordemItemRepository = ordemItemRepository;
         this.ordemDeServicoRepository = ordemDeServicoRepository;
         this.produtoRepository = produtoRepository;
         this.estoqueRepository = estoqueRepository;
         this.almoxarifadoRepository = almoxarifadoRepository;
+        this.movimentacaoEstoqueService = movimentacaoEstoqueService;
     }
 
     @Transactional
@@ -62,6 +64,7 @@ public class OrdemServicoItemService {
             estoque.setQuantidade(estoque.getQuantidade() - dto.getQuantidade());
             estoqueRepository.save(estoque);
             OrdemServicoItem ordemItemSalvo = ordemItemRepository.save(ordemItem);
+            movimentacaoEstoqueService.registrarSaidaPorOrdemDeServico(ordemItemSalvo);
             return new OrdemServicoItemResponseDTO(ordemItemSalvo);
     }
 

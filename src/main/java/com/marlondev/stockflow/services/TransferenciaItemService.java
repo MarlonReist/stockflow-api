@@ -20,12 +20,14 @@ public class TransferenciaItemService {
     public final TransferenciaAlmoxarifadoRepository transferenciaAlmoxarifadoRepository;
     public final AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository;
     public final ProdutoRepository produtoRepository;
+    private final MovimentacaoEstoqueService movimentacaoEstoqueService;
 
-    public TransferenciaItemService(TransferenciaItemRepository transferenciaRepository, TransferenciaAlmoxarifadoRepository transferenciaAlmoxarifadoRepository, AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository, ProdutoRepository produtoRepository) {
+    public TransferenciaItemService(TransferenciaItemRepository transferenciaRepository, TransferenciaAlmoxarifadoRepository transferenciaAlmoxarifadoRepository, AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository, ProdutoRepository produtoRepository, MovimentacaoEstoqueService movimentacaoEstoqueService) {
         this.transferenciaRepository = transferenciaRepository;
         this.transferenciaAlmoxarifadoRepository = transferenciaAlmoxarifadoRepository;
         this.almoxarifadoEstoqueRepository = almoxarifadoEstoqueRepository;
         this.produtoRepository = produtoRepository;
+        this.movimentacaoEstoqueService = movimentacaoEstoqueService;
     }
 
     @Transactional
@@ -74,6 +76,8 @@ public class TransferenciaItemService {
         transferenciaItem.setProduto(produto);
         transferenciaItem.setQuantidade(dto.getQuantidade());
         TransferenciaItem transferenciaSalva = transferenciaRepository.save(transferenciaItem);
+        movimentacaoEstoqueService.registrarSaidaTransferencia(transferenciaSalva);
+        movimentacaoEstoqueService.registrarEntradaTransferencia(transferenciaSalva);
         return new TransferenciaItemResponseDTO(transferenciaSalva);
     }
 
