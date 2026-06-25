@@ -1,5 +1,8 @@
 HELP.md
 target/
+.tools/
+.m2/
+.backup-checkout-quebrado-*/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
