@@ -2,8 +2,10 @@ package com.marlondev.stockflow.controller;
 import com.marlondev.stockflow.dto.OrdemDeServicoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
 import com.marlondev.stockflow.services.OrdemDeServicoService;
+import com.marlondev.stockflow.services.PdfService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +16,11 @@ import java.util.List;
 public class OrdemDeServicoController {
 
     private final OrdemDeServicoService osService;
+    private final PdfService pdfService;
 
-    public OrdemDeServicoController(OrdemDeServicoService osService) {
+    public OrdemDeServicoController(OrdemDeServicoService osService, PdfService pdfService) {
         this.osService = osService;
+        this.pdfService = pdfService;
     }
 
     @PostMapping
@@ -59,5 +63,25 @@ public class OrdemDeServicoController {
     public ResponseEntity<OrdemDeServicoResponseDTO> cancelarOs(@PathVariable Long id) {
         OrdemDeServicoResponseDTO osCancelada = osService.cancelarOs(id);
         return ResponseEntity.ok().body(osCancelada);
+    }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> gerarPdf(@PathVariable Long id) {
+        byte[] pdf = pdfService.gerarPdfOrdemServico(id);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "inline; filename=os-" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+
+    @GetMapping("/{id}/produtos/pdf")
+    public ResponseEntity<byte[]> gerarRelatorioProdutosPdf(@PathVariable Long id) {
+        byte[] pdf = pdfService.gerarRelatorioProdutosOrdemServico(id);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "inline; filename=os-" + id + "-produtos.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 }
