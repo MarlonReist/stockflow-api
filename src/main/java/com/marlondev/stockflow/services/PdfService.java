@@ -2,8 +2,12 @@ package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.Cliente;
 import com.marlondev.stockflow.domain.Colaborador;
+import com.marlondev.stockflow.domain.Almoxarifado;
+import com.marlondev.stockflow.domain.AlmoxarifadoEstoque;
 import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.OrdemServicoItem;
+import com.marlondev.stockflow.repositories.AlmoxarifadoEstoqueRepository;
+import com.marlondev.stockflow.repositories.AlmoxarifadoRepository;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
 import com.marlondev.stockflow.repositories.OrdemServicoItemRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
@@ -40,11 +44,17 @@ public class PdfService {
 
     private final OrdemDeServicoRepository ordemDeServicoRepository;
     private final OrdemServicoItemRepository ordemServicoItemRepository;
+    private final AlmoxarifadoRepository almoxarifadoRepository;
+    private final AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository;
 
     public PdfService(OrdemDeServicoRepository ordemDeServicoRepository,
-                      OrdemServicoItemRepository ordemServicoItemRepository) {
+                      OrdemServicoItemRepository ordemServicoItemRepository,
+                      AlmoxarifadoRepository almoxarifadoRepository,
+                      AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository) {
         this.ordemDeServicoRepository = ordemDeServicoRepository;
         this.ordemServicoItemRepository = ordemServicoItemRepository;
+        this.almoxarifadoRepository = almoxarifadoRepository;
+        this.almoxarifadoEstoqueRepository = almoxarifadoEstoqueRepository;
     }
 
     public byte[] gerarPdfOrdemServico(Long id) {
@@ -66,9 +76,32 @@ public class PdfService {
             document.close();
             return outputStream.toByteArray();
         } catch (DocumentException ex) {
-            throw new DatabaseException("Erro ao gerar PDF da ordem de servico");
+            throw new DatabaseException("Erro ao gerar PDF da ordem de servi\u00e7o");
         } catch (Exception ex) {
-            throw new DatabaseException("Erro inesperado ao gerar PDF da ordem de servico");
+            throw new DatabaseException("Erro inesperado ao gerar PDF da ordem de servi\u00e7o");
+        }
+    }
+
+    public byte[] gerarRelatorioProdutosAlmoxarifado(Long almoxarifadoId) {
+        Almoxarifado almoxarifado = almoxarifadoRepository.findById(almoxarifadoId)
+                .orElseThrow(() -> new ResourceNotFoundException(almoxarifadoId));
+        List<AlmoxarifadoEstoque> estoques = almoxarifadoEstoqueRepository
+                .findByAlmoxarifadoIdOrderByProdutoNomeAsc(almoxarifadoId);
+
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4, 28, 28, 24, 24);
+            PdfWriter.getInstance(document, outputStream);
+            document.open();
+
+            adicionarCabecalhoRelatorioAlmoxarifado(document, almoxarifado);
+            adicionarTabelaProdutosAlmoxarifado(document, estoques);
+
+            document.close();
+            return outputStream.toByteArray();
+        } catch (DocumentException ex) {
+            throw new DatabaseException("Erro ao gerar relat\u00f3rio de produtos do almoxarifado");
+        } catch (Exception ex) {
+            throw new DatabaseException("Erro inesperado ao gerar relat\u00f3rio de produtos do almoxarifado");
         }
     }
 
@@ -88,9 +121,9 @@ public class PdfService {
             document.close();
             return outputStream.toByteArray();
         } catch (DocumentException ex) {
-            throw new DatabaseException("Erro ao gerar relatorio de produtos da ordem de servico");
+            throw new DatabaseException("Erro ao gerar relat\u00f3rio de produtos da ordem de servi\u00e7o");
         } catch (Exception ex) {
-            throw new DatabaseException("Erro inesperado ao gerar relatorio de produtos da ordem de servico");
+            throw new DatabaseException("Erro inesperado ao gerar relat\u00f3rio de produtos da ordem de servi\u00e7o");
         }
     }
 
@@ -102,19 +135,19 @@ public class PdfService {
 
         PdfPCell marca = celulaSemBorda();
         marca.addElement(new Paragraph("STOCKFLOW", fonteNegrito(14, CINZA_ESCURO)));
-        marca.addElement(new Paragraph("Sistema de controle de estoque e ordem de servico", fonteNormal(8, CINZA_ESCURO)));
+        marca.addElement(new Paragraph("Sistema de controle de estoque e ordem de servi\u00e7o", fonteNormal(8, CINZA_ESCURO)));
 
         PdfPCell numero = celulaSemBorda();
-        numero.addElement(paragrafoDireita("OS No " + os.getId(), fonteNegrito(13, CINZA_ESCURO)));
+        numero.addElement(paragrafoDireita("OS N\u00ba " + os.getId(), fonteNegrito(13, CINZA_ESCURO)));
         numero.addElement(paragrafoDireita("Status: " + texto(os.getStatus() == null ? "" : os.getStatus().name()), fonteNormal(8, CINZA_ESCURO)));
-        numero.addElement(paragrafoDireita("Emissao: " + formatarData(LocalDate.now()), fonteNormal(8, CINZA_ESCURO)));
+        numero.addElement(paragrafoDireita("Emiss\u00e3o: " + formatarData(LocalDate.now()), fonteNormal(8, CINZA_ESCURO)));
         numero.addElement(paragrafoDireita("Motivo: " + texto(os.getDescricao()), fonteNormal(8, CINZA_ESCURO)));
 
         tabela.addCell(marca);
         tabela.addCell(numero);
         document.add(tabela);
 
-        Paragraph titulo = new Paragraph("ORDEM DE SERVICO", fonteNegrito(15, Color.BLACK));
+        Paragraph titulo = new Paragraph("ORDEM DE SERVI\u00c7O", fonteNegrito(15, Color.BLACK));
         titulo.setAlignment(Element.ALIGN_CENTER);
         titulo.setSpacingAfter(10);
         document.add(titulo);
@@ -130,7 +163,7 @@ public class PdfService {
         tabela.addCell(celulaCampo("Cliente", cliente.getNome(), 2));
         tabela.addCell(celulaCampo("CPF", cliente.getCpf(), 1));
         tabela.addCell(celulaCampo("Telefone", cliente.getTelefone(), 1));
-        tabela.addCell(celulaCampo("Endereco completo", cliente.getEndereco(), 3));
+        tabela.addCell(celulaCampo("Endere\u00e7o completo", cliente.getEndereco(), 3));
         tabela.addCell(celulaCampo("E-mail", cliente.getEmail(), 1));
 
         document.add(tabela);
@@ -147,7 +180,7 @@ public class PdfService {
         tabela.addCell(celulaCampo("Data abertura", formatarData(os.getDataAbertura()), 1));
         tabela.addCell(celulaCampo("Data fechamento", formatarData(os.getDataFechamento()), 1));
         tabela.addCell(celulaCampo("Status", os.getStatus() == null ? "" : os.getStatus().name(), 1));
-        tabela.addCell(celulaCampo("Tecnico / Colaborador", nomeColaborador(os.getColaborador()), 4));
+        tabela.addCell(celulaCampo("T\u00e9cnico / Colaborador", nomeColaborador(os.getColaborador()), 4));
 
         document.add(tabela);
     }
@@ -157,14 +190,14 @@ public class PdfService {
         tabela.setWidthPercentage(100);
         tabela.setSpacingAfter(8);
 
-        adicionarTituloSecao(tabela, "OBSERVACAO", 1);
+        adicionarTituloSecao(tabela, "OBSERVA\u00c7\u00c3O", 1);
 
         PdfPCell observacao = new PdfPCell();
         observacao.setPadding(6);
         observacao.setMinimumHeight(150);
         observacao.setBorderColor(BORDA);
 
-        Paragraph horarios = new Paragraph("Horario de chegada: ____:____     Horario de saida: ____:____", fonteNormal(8, Color.BLACK));
+        Paragraph horarios = new Paragraph("Hor\u00e1rio de chegada: ____:____     Hor\u00e1rio de sa\u00edda: ____:____", fonteNormal(8, Color.BLACK));
         horarios.setSpacingAfter(8);
         observacao.addElement(horarios);
 
@@ -189,7 +222,7 @@ public class PdfService {
         tabela.setSpacingAfter(10);
 
         adicionarTituloSecao(tabela, "CONTROLE DO ATENDIMENTO", 2);
-        tabela.addCell(celulaCampo("Atendimento concluido", "( )", 1));
+        tabela.addCell(celulaCampo("Atendimento conclu\u00eddo", "( )", 1));
         tabela.addCell(celulaCampo("Atendimento solucionado", "( )", 1));
 
         document.add(tabela);
@@ -203,9 +236,9 @@ public class PdfService {
         tabela.setSpacingBefore(8);
 
         tabela.addCell(celulaCampo("Cliente", texto(cliente.getNome()), 1));
-        tabela.addCell(celulaCampo("Tecnico / Colaborador", nomeColaborador(colaborador), 1));
+        tabela.addCell(celulaCampo("T\u00e9cnico / Colaborador", nomeColaborador(colaborador), 1));
         tabela.addCell(celulaAssinatura("Assinatura do cliente"));
-        tabela.addCell(celulaAssinatura("Assinatura do tecnico"));
+        tabela.addCell(celulaAssinatura("Assinatura do t\u00e9cnico"));
 
         document.add(tabela);
     }
@@ -216,7 +249,7 @@ public class PdfService {
         sistema.setSpacingAfter(4);
         document.add(sistema);
 
-        Paragraph titulo = new Paragraph("RELATORIO DE PRODUTOS UTILIZADOS NA OS", fonteNegrito(13, Color.BLACK));
+        Paragraph titulo = new Paragraph("RELAT\u00d3RIO DE PRODUTOS UTILIZADOS NA OS", fonteNegrito(13, Color.BLACK));
         titulo.setAlignment(Element.ALIGN_CENTER);
         titulo.setSpacingAfter(12);
         document.add(titulo);
@@ -226,13 +259,13 @@ public class PdfService {
         dados.setWidths(new float[]{0.8f, 2f, 1.1f, 1.4f});
         dados.setSpacingAfter(10);
 
-        adicionarTituloSecao(dados, "DADOS DO RELATORIO", 4);
+        adicionarTituloSecao(dados, "DADOS DO RELAT\u00d3RIO", 4);
         dados.addCell(celulaCampo("OS", String.valueOf(os.getId()), 1));
         dados.addCell(celulaCampo("Cliente", os.getCliente().getNome(), 2));
-        dados.addCell(celulaCampo("Emissao", formatarData(LocalDate.now()), 1));
+        dados.addCell(celulaCampo("Emiss\u00e3o", formatarData(LocalDate.now()), 1));
         dados.addCell(celulaCampo("Data abertura", formatarData(os.getDataAbertura()), 1));
         dados.addCell(celulaCampo("Status", os.getStatus() == null ? "" : os.getStatus().name(), 1));
-        dados.addCell(celulaCampo("Tecnico / Colaborador", nomeColaborador(os.getColaborador()), 2));
+        dados.addCell(celulaCampo("T\u00e9cnico / Colaborador", nomeColaborador(os.getColaborador()), 2));
 
         document.add(dados);
     }
@@ -252,7 +285,7 @@ public class PdfService {
         adicionarCabecalhoTabela(tabela, "Valor total");
 
         if (itens.isEmpty()) {
-            PdfPCell vazio = new PdfPCell(new Phrase("Nenhum produto vinculado a esta ordem de servico.", fonteNormal(8, Color.BLACK)));
+            PdfPCell vazio = new PdfPCell(new Phrase("Nenhum produto vinculado a esta ordem de servi\u00e7o.", fonteNormal(8, Color.BLACK)));
             vazio.setColspan(6);
             vazio.setPadding(6);
             vazio.setBorderColor(BORDA);
@@ -269,6 +302,73 @@ public class PdfService {
         }
 
         PdfPCell total = new PdfPCell(new Phrase("Total geral: " + formatarMoeda(calcularValorTotal(itens)), fonteNegrito(8, Color.BLACK)));
+        total.setColspan(6);
+        total.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        total.setPadding(6);
+        total.setBorderColor(BORDA);
+        tabela.addCell(total);
+
+        document.add(tabela);
+    }
+
+    private void adicionarCabecalhoRelatorioAlmoxarifado(Document document, Almoxarifado almoxarifado)
+            throws DocumentException {
+        Paragraph sistema = new Paragraph("STOCKFLOW", fonteNegrito(16, CINZA_ESCURO));
+        sistema.setAlignment(Element.ALIGN_CENTER);
+        sistema.setSpacingAfter(4);
+        document.add(sistema);
+
+        Paragraph titulo = new Paragraph("RELAT\u00d3RIO DE PRODUTOS DO ALMOXARIFADO", fonteNegrito(13, Color.BLACK));
+        titulo.setAlignment(Element.ALIGN_CENTER);
+        titulo.setSpacingAfter(12);
+        document.add(titulo);
+
+        PdfPTable dados = new PdfPTable(3);
+        dados.setWidthPercentage(100);
+        dados.setWidths(new float[]{0.8f, 2.5f, 1f});
+        dados.setSpacingAfter(10);
+
+        adicionarTituloSecao(dados, "DADOS DO RELAT\u00d3RIO", 3);
+        dados.addCell(celulaCampo("ID", String.valueOf(almoxarifado.getId()), 1));
+        dados.addCell(celulaCampo("Almoxarifado", almoxarifado.getNome(), 1));
+        dados.addCell(celulaCampo("Emiss\u00e3o", formatarData(LocalDate.now()), 1));
+
+        document.add(dados);
+    }
+
+    private void adicionarTabelaProdutosAlmoxarifado(Document document, List<AlmoxarifadoEstoque> estoques)
+            throws DocumentException {
+        PdfPTable tabela = new PdfPTable(6);
+        tabela.setWidthPercentage(100);
+        tabela.setWidths(new float[]{0.7f, 2.5f, 1.5f, 1f, 0.9f, 1.1f});
+        tabela.setSpacingAfter(8);
+
+        adicionarTituloSecao(tabela, "PRODUTOS EM ESTOQUE", 6);
+        adicionarCabecalhoTabela(tabela, "ID");
+        adicionarCabecalhoTabela(tabela, "Produto");
+        adicionarCabecalhoTabela(tabela, "Categoria");
+        adicionarCabecalhoTabela(tabela, "Unidade");
+        adicionarCabecalhoTabela(tabela, "Qtd.");
+        adicionarCabecalhoTabela(tabela, "Pre\u00e7o");
+
+        if (estoques.isEmpty()) {
+            PdfPCell vazio = new PdfPCell(new Phrase("Nenhum produto cadastrado neste almoxarifado.", fonteNormal(8, Color.BLACK)));
+            vazio.setColspan(6);
+            vazio.setPadding(6);
+            vazio.setBorderColor(BORDA);
+            tabela.addCell(vazio);
+        } else {
+            for (AlmoxarifadoEstoque estoque : estoques) {
+                tabela.addCell(celulaTabela(String.valueOf(estoque.getProduto().getId())));
+                tabela.addCell(celulaTabela(estoque.getProduto().getNome()));
+                tabela.addCell(celulaTabela(estoque.getProduto().getCategoria().getNome()));
+                tabela.addCell(celulaTabela(estoque.getProduto().getUnidadeMedida().name()));
+                tabela.addCell(celulaTabela(String.valueOf(estoque.getQuantidade())));
+                tabela.addCell(celulaTabela(formatarMoeda(estoque.getProduto().getPreco())));
+            }
+        }
+
+        PdfPCell total = new PdfPCell(new Phrase("Total de itens em estoque: " + calcularQuantidadeTotal(estoques), fonteNegrito(8, Color.BLACK)));
         total.setColspan(6);
         total.setHorizontalAlignment(Element.ALIGN_RIGHT);
         total.setPadding(6);
@@ -360,6 +460,14 @@ public class PdfService {
         double total = 0.0;
         for (OrdemServicoItem item : itens) {
             total += item.valorTotal();
+        }
+        return total;
+    }
+
+    private Integer calcularQuantidadeTotal(List<AlmoxarifadoEstoque> estoques) {
+        int total = 0;
+        for (AlmoxarifadoEstoque estoque : estoques) {
+            total += estoque.getQuantidade();
         }
         return total;
     }

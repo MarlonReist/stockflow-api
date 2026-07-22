@@ -3,8 +3,10 @@ package com.marlondev.stockflow.controller;
 import com.marlondev.stockflow.dto.AlmoxarifadoEstoqueRequestDTO;
 import com.marlondev.stockflow.dto.AlmoxarifadoEstoqueResponseDTO;
 import com.marlondev.stockflow.services.AlmoxarifadoEstoqueService;
+import com.marlondev.stockflow.services.PdfService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +17,11 @@ import java.util.List;
 public class AlmoxarifadoEstoqueController {
 
     private final AlmoxarifadoEstoqueService almoxarifadoEstoqueService;
+    private final PdfService pdfService;
 
-    public AlmoxarifadoEstoqueController(AlmoxarifadoEstoqueService almoxarifadoEstoqueService){
+    public AlmoxarifadoEstoqueController(AlmoxarifadoEstoqueService almoxarifadoEstoqueService, PdfService pdfService){
         this.almoxarifadoEstoqueService = almoxarifadoEstoqueService;
+        this.pdfService = pdfService;
     }
 
     @PostMapping
@@ -48,5 +52,15 @@ public class AlmoxarifadoEstoqueController {
     public ResponseEntity<AlmoxarifadoEstoqueResponseDTO> atualizarAlmoxarifadoEstoque(@PathVariable Long id, @RequestBody @Valid AlmoxarifadoEstoqueRequestDTO dto) {
         AlmoxarifadoEstoqueResponseDTO almoxarifadoEstoqueAtualizado = almoxarifadoEstoqueService.atualizarEstoque(id, dto);
         return ResponseEntity.ok().body(almoxarifadoEstoqueAtualizado);
+    }
+
+    @GetMapping("/almoxarifados/{almoxarifadoId}/pdf")
+    public ResponseEntity<byte[]> gerarRelatorioProdutosAlmoxarifadoPdf(@PathVariable Long almoxarifadoId) {
+        byte[] pdf = pdfService.gerarRelatorioProdutosAlmoxarifado(almoxarifadoId);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "inline; filename=almoxarifado-" + almoxarifadoId + "-produtos.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 }
