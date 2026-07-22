@@ -3,6 +3,8 @@ package com.marlondev.stockflow.controller;
 import com.marlondev.stockflow.dto.UsuarioRequestDTO;
 import com.marlondev.stockflow.dto.UsuarioResponseDTO;
 import com.marlondev.stockflow.services.UsuarioService;
+import com.marlondev.stockflow.dto.ConviteUsuarioResponseDTO;
+import com.marlondev.stockflow.services.ConviteUsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +17,11 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final ConviteUsuarioService conviteUsuarioService;
 
-    public UsuarioController(UsuarioService usuarioService) {
+    public UsuarioController(UsuarioService usuarioService, ConviteUsuarioService conviteUsuarioService) {
         this.usuarioService = usuarioService;
+        this.conviteUsuarioService = conviteUsuarioService;
     }
 
     @PostMapping
@@ -44,21 +48,27 @@ public class UsuarioController {
         return ResponseEntity.ok(listDto);
     }
 
-    @PutMapping (value = "/{id}/desativar")
-    public ResponseEntity<UsuarioResponseDTO> desativarUsuario(@PathVariable Long id){
-        UsuarioResponseDTO usuarioDesativado = usuarioService.desativarUsuario(id);
-        return ResponseEntity.ok().body(usuarioDesativado);
+    @PutMapping (value = "/{id}/bloquear")
+    public ResponseEntity<UsuarioResponseDTO> bloquearUsuario(@PathVariable Long id){
+        UsuarioResponseDTO bloquearUsuario = usuarioService.bloquearUsuario(id);
+        return ResponseEntity.ok().body(bloquearUsuario);
     }
 
-    @PutMapping (value = "/{id}/ativar")
-    public ResponseEntity<UsuarioResponseDTO> ativarUsuario(@PathVariable Long id){
-        UsuarioResponseDTO usuarioAtivado = usuarioService.ativarUsuario(id);
-        return ResponseEntity.ok().body(usuarioAtivado);
+    @PutMapping (value = "/{id}/desbloquear")
+    public ResponseEntity<UsuarioResponseDTO> desbloquearUsuario(@PathVariable Long id){
+        UsuarioResponseDTO usuarioDesbloqueado = usuarioService.desbloquearUsuario(id);
+        return ResponseEntity.ok().body(usuarioDesbloqueado);
     }
 
     @PutMapping (value = "/{id}")
     public ResponseEntity<UsuarioResponseDTO> atualizarUsuario(@PathVariable Long id, @RequestBody @Valid UsuarioRequestDTO dto) {
         UsuarioResponseDTO usuarioAtualizado = usuarioService.atualizarUsuario(id, dto);
         return ResponseEntity.ok().body(usuarioAtualizado);
+    }
+
+    @PostMapping(value = "/convites")
+    public ResponseEntity<ConviteUsuarioResponseDTO> convidarUsuario(@RequestBody @Valid UsuarioRequestDTO dto) {
+        ConviteUsuarioResponseDTO convite = conviteUsuarioService.convidarUsuario(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(convite);
     }
 }
