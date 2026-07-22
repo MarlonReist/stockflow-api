@@ -14,10 +14,12 @@ public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     public LoginResponseDTO login(LoginRequestDTO dto) {
@@ -38,13 +40,16 @@ public class AuthService {
             throw new DatabaseException("Login ou senha inválidos!");
         }
 
+        String token = jwtService.gerarToken(usuario);
+
         return new LoginResponseDTO(
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getLogin(),
                 usuario.getPerfil(),
                 usuario.getStatus(),
-                true
+                true,
+                token
         );
     }
 }

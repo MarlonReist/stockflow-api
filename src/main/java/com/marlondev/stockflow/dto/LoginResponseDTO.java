@@ -11,14 +11,16 @@ public class LoginResponseDTO {
     private PerfilUsuario perfil;
     private StatusUsuario status;
     private Boolean autenticado;
+    private String token;
 
-    public LoginResponseDTO(Long usuarioId, String nome, String login, PerfilUsuario perfil, StatusUsuario status, Boolean autenticado) {
+    public LoginResponseDTO(Long usuarioId, String nome, String login, PerfilUsuario perfil, StatusUsuario status, Boolean autenticado, String token) {
         this.usuarioId = usuarioId;
         this.nome = nome;
         this.login = login;
         this.perfil = perfil;
         this.status = status;
         this.autenticado = autenticado;
+        this.token = token;
     }
 
     public Long getUsuarioId() {
@@ -43,5 +45,9 @@ public class LoginResponseDTO {
 
     public Boolean getAutenticado() {
         return autenticado;
+    }
+
+    public String getToken() {
+        return token;
     }
 }
