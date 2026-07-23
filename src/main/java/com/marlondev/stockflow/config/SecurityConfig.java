@@ -33,6 +33,9 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/esqueci-senha").permitAll()
+                        .requestMatchers("/auth/recuperacao-senha/validar").permitAll()
+                        .requestMatchers("/auth/redefinir-senha").permitAll()
                         .requestMatchers("/convites/validar").permitAll()
                         .requestMatchers("/convites/ativar").permitAll()
                         .requestMatchers("/usuarios/**").hasAuthority("ADMIN")
