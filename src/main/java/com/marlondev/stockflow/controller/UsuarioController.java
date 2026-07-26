@@ -71,4 +71,10 @@ public class UsuarioController {
         ConviteUsuarioResponseDTO convite = conviteUsuarioService.convidarUsuario(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(convite);
     }
+
+    @PostMapping(value = "/{id}/reenviar-convite")
+    public ResponseEntity<ConviteUsuarioResponseDTO> reenviarConvite(@PathVariable Long id) {
+        ConviteUsuarioResponseDTO convite = conviteUsuarioService.reenviarConvite(id);
+        return ResponseEntity.ok(convite);
+    }
 }

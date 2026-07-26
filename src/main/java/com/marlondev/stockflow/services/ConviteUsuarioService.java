@@ -10,6 +10,7 @@ import com.marlondev.stockflow.domain.ConviteUsuario;
 import com.marlondev.stockflow.domain.Usuario;
 import com.marlondev.stockflow.dto.ConviteValidacaoResponseDTO;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
+import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -190,5 +191,27 @@ public class ConviteUsuarioService {
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("SHA-256 não disponível", ex);
         }
+    }
+
+    public ConviteUsuarioResponseDTO reenviarConvite(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException(usuarioId));
+
+        if (usuario.getStatus() != StatusUsuario.CONVIDADO) {
+            throw new DatabaseException("Convite só pode ser reenviado para usuário convidado!");
+        }
+
+        cancelarConvitesAbertos(usuario.getId());
+
+        String token = criarConvite(usuario);
+
+        return new ConviteUsuarioResponseDTO(
+                usuario.getId(),
+                usuario.getNome(),
+                usuario.getLogin(),
+                usuario.getPerfil(),
+                usuario.getStatus(),
+                token
+        );
     }
 }

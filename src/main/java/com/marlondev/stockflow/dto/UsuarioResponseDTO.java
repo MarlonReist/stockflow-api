@@ -16,6 +16,7 @@ public class UsuarioResponseDTO implements Serializable {
     private String login;
     private PerfilUsuario perfil;
     private StatusUsuario status;
+    private Boolean conviteExpirado;
 
     public UsuarioResponseDTO(){
     }
@@ -26,6 +27,16 @@ public class UsuarioResponseDTO implements Serializable {
         login = usuario.getLogin();
         perfil = usuario.getPerfil();
         status = usuario.getStatus();
+        conviteExpirado = false;
+    }
+
+    public UsuarioResponseDTO(Usuario usuario, Boolean conviteExpirado){
+        id = usuario.getId();
+        nome = usuario.getNome();
+        login = usuario.getLogin();
+        perfil = usuario.getPerfil();
+        status = usuario.getStatus();
+        this.conviteExpirado = conviteExpirado;
     }
 
     public Long getId() {
@@ -66,5 +77,13 @@ public class UsuarioResponseDTO implements Serializable {
 
     public void setStatus(StatusUsuario status) {
         this.status = status;
+    }
+
+    public Boolean getConviteExpirado() {
+        return conviteExpirado;
+    }
+
+    public void setConviteExpirado(Boolean conviteExpirado) {
+        this.conviteExpirado = conviteExpirado;
     }
 }
