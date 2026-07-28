@@ -11,6 +11,7 @@ import com.marlondev.stockflow.dto.RedefinirSenhaResponseDTO;
 import com.marlondev.stockflow.repositories.RecuperacaoSenhaRepository;
 import com.marlondev.stockflow.repositories.UsuarioRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,9 @@ import java.util.List;
 @Service
 public class RecuperacaoSenhaService {
 
+    @Value("${stockflow.frontend.url}")
+    private String frontendUrl;
+
     private static final String MENSAGEM_SOLICITACAO =
             "Se o login informado existir e estiver ativo, a recuperação de senha será enviada.";
 
@@ -32,15 +36,17 @@ public class RecuperacaoSenhaService {
     private final UsuarioRepository usuarioRepository;
     private final RecuperacaoSenhaRepository recuperacaoSenhaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public RecuperacaoSenhaService(
             UsuarioRepository usuarioRepository,
             RecuperacaoSenhaRepository recuperacaoSenhaRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder, EmailService emailService
     ) {
         this.usuarioRepository = usuarioRepository;
         this.recuperacaoSenhaRepository = recuperacaoSenhaRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     public EsqueciSenhaResponseDTO solicitarRecuperacao(EsqueciSenhaRequestDTO dto) {
@@ -52,6 +58,9 @@ public class RecuperacaoSenhaService {
 
         cancelarRecuperacoesAbertas(usuario.getId());
         String token = criarRecuperacao(usuario);
+
+        String linkRedefinicao = montarLinkRedefinicaoSenha(token);
+        emailService.enviarRecuperacaoSenha(usuario.getLogin(), usuario.getNome(), linkRedefinicao);
 
         return new EsqueciSenhaResponseDTO(true, MENSAGEM_SOLICITACAO, token);
     }
@@ -169,5 +178,9 @@ public class RecuperacaoSenhaService {
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("SHA-256 não disponível", ex);
         }
+    }
+
+    private String montarLinkRedefinicaoSenha(String token) {
+        return frontendUrl + "/redefinir-senha?token=" + token;
     }
 }

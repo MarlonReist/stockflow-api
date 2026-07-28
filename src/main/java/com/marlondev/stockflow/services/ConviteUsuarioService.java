@@ -12,6 +12,7 @@ import com.marlondev.stockflow.dto.ConviteValidacaoResponseDTO;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,15 +27,20 @@ import java.util.List;
 @Service
 public class ConviteUsuarioService {
 
+    @Value("${stockflow.frontend.url}")
+    private String frontendUrl;
+
     private final SecureRandom secureRandom = new SecureRandom();
     private final UsuarioRepository usuarioRepository;
     private final ConviteUsuarioRepository conviteUsuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public ConviteUsuarioService(UsuarioRepository usuarioRepository, ConviteUsuarioRepository conviteUsuarioRepository, PasswordEncoder passwordEncoder) {
+    public ConviteUsuarioService(UsuarioRepository usuarioRepository, ConviteUsuarioRepository conviteUsuarioRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.usuarioRepository = usuarioRepository;
         this.conviteUsuarioRepository = conviteUsuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     public ConviteUsuarioResponseDTO convidarUsuario(UsuarioRequestDTO dto) {
@@ -52,6 +58,9 @@ public class ConviteUsuarioService {
         usuario = usuarioRepository.save(usuario);
 
         String token = criarConvite(usuario);
+
+        String linkAtivacao = montarLinkAtivacao(token);
+        emailService.enviarConvite(usuario.getLogin(), usuario.getNome(), linkAtivacao);
 
         return new ConviteUsuarioResponseDTO(
                 usuario.getId(),
@@ -205,6 +214,9 @@ public class ConviteUsuarioService {
 
         String token = criarConvite(usuario);
 
+        String linkAtivacao = montarLinkAtivacao(token);
+        emailService.enviarConvite(usuario.getLogin(), usuario.getNome(), linkAtivacao);
+
         return new ConviteUsuarioResponseDTO(
                 usuario.getId(),
                 usuario.getNome(),
@@ -213,5 +225,9 @@ public class ConviteUsuarioService {
                 usuario.getStatus(),
                 token
         );
+    }
+
+    private String montarLinkAtivacao(String token) {
+        return frontendUrl + "/ativar-conta?token=" + token;
     }
 }
