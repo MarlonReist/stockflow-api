@@ -8,15 +8,20 @@ import com.marlondev.stockflow.repositories.UsuarioRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService {
+
+    @Value("${stockflow.convite.cooldown-minutos}")
+    private long cooldownReenvioMinutos;
 
     private final UsuarioRepository usuarioRepository;
     private final ConviteUsuarioRepository conviteUsuarioRepository;
@@ -145,6 +150,46 @@ public class UsuarioService {
         return new AlterarSenhaResponseDTO(true, "Senha alterada com sucesso!");
     }
 
+    private boolean podeReenviarConvite(Usuario usuario) {
+        if (usuario.getStatus() != StatusUsuario.CONVIDADO) {
+            return false;
+        }
+
+        return conviteUsuarioRepository
+                .findFirstByUsuarioIdAndDataUtilizacaoIsNullAndDataCancelamentoIsNullOrderByDataCriacaoDesc(usuario.getId())
+                .map(convite -> {
+                    LocalDateTime proximoReenvioPermitido = convite
+                            .getDataCriacao()
+                            .plusMinutes(cooldownReenvioMinutos);
+
+                    return !LocalDateTime.now().isBefore(proximoReenvioPermitido);
+                })
+                .orElse(true);
+    }
+
+    private long segundosParaReenviarConvite(Usuario usuario) {
+        if (usuario.getStatus() != StatusUsuario.CONVIDADO) {
+            return 0L;
+        }
+
+        return conviteUsuarioRepository
+                .findFirstByUsuarioIdAndDataUtilizacaoIsNullAndDataCancelamentoIsNullOrderByDataCriacaoDesc(usuario.getId())
+                .map(convite -> {
+                    LocalDateTime agora = LocalDateTime.now();
+
+                    LocalDateTime proximoReenvioPermitido = convite
+                            .getDataCriacao()
+                            .plusMinutes(cooldownReenvioMinutos);
+
+                    if (!agora.isBefore(proximoReenvioPermitido)) {
+                        return 0L;
+                    }
+
+                    return Duration.between(agora, proximoReenvioPermitido).getSeconds();
+                })
+                .orElse(0L);
+    }
+
     private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
         boolean conviteExpirado = usuario.getStatus() == StatusUsuario.CONVIDADO
                 && conviteUsuarioRepository.existsByUsuarioIdAndDataUtilizacaoIsNullAndDataCancelamentoIsNullAndDataExpiracaoBefore(
@@ -152,6 +197,14 @@ public class UsuarioService {
                 LocalDateTime.now()
         );
 
-        return new UsuarioResponseDTO(usuario, conviteExpirado);
+        boolean podeReenviarConvite = podeReenviarConvite(usuario);
+        long segundosParaReenviarConvite = segundosParaReenviarConvite(usuario);
+
+        return new UsuarioResponseDTO(
+                usuario,
+                conviteExpirado,
+                podeReenviarConvite,
+                segundosParaReenviarConvite
+        );
     }
 }

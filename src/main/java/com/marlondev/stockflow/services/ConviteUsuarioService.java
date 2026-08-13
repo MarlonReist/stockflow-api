@@ -30,6 +30,9 @@ public class ConviteUsuarioService {
     @Value("${stockflow.frontend.url}")
     private String frontendUrl;
 
+    @Value("${stockflow.convite.cooldown-minutos}")
+    private long cooldownReenvioMinutos;
+
     private final SecureRandom secureRandom = new SecureRandom();
     private final UsuarioRepository usuarioRepository;
     private final ConviteUsuarioRepository conviteUsuarioRepository;
@@ -156,6 +159,26 @@ public class ConviteUsuarioService {
         );
     }
 
+    private void validarCooldownReenvio(Long usuarioId) {
+        ConviteUsuario ultimoConviteAberto = conviteUsuarioRepository
+                .findFirstByUsuarioIdAndDataUtilizacaoIsNullAndDataCancelamentoIsNullOrderByDataCriacaoDesc(usuarioId)
+                .orElse(null);
+
+        if (ultimoConviteAberto == null) {
+            return;
+        }
+
+        LocalDateTime proximoReenvioPermitido = ultimoConviteAberto
+                .getDataCriacao()
+                .plusMinutes(cooldownReenvioMinutos);
+
+        if (LocalDateTime.now().isBefore(proximoReenvioPermitido)) {
+            throw new DatabaseException(
+                    "Aguarde alguns minutos antes de reenviar o convite!"
+            );
+        }
+    }
+
     private void cancelarConvitesAbertos(Long usuarioId) {
         List<ConviteUsuario> convitesAbertos = conviteUsuarioRepository
                 .findByUsuarioIdAndDataUtilizacaoIsNullAndDataCancelamentoIsNull(usuarioId);
@@ -209,6 +232,8 @@ public class ConviteUsuarioService {
         if (usuario.getStatus() != StatusUsuario.CONVIDADO) {
             throw new DatabaseException("Convite só pode ser reenviado para usuário convidado!");
         }
+
+        validarCooldownReenvio(usuario.getId());
 
         cancelarConvitesAbertos(usuario.getId());
 

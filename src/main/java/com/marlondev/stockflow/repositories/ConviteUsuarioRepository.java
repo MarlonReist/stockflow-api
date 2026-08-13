@@ -14,4 +14,6 @@ public interface ConviteUsuarioRepository extends JpaRepository<ConviteUsuario, 
     List<ConviteUsuario> findByUsuarioIdAndDataUtilizacaoIsNullAndDataCancelamentoIsNull(Long usuarioId);
 
     boolean existsByUsuarioIdAndDataUtilizacaoIsNullAndDataCancelamentoIsNullAndDataExpiracaoBefore(Long usuarioId, LocalDateTime data);
+
+    Optional<ConviteUsuario> findFirstByUsuarioIdAndDataUtilizacaoIsNullAndDataCancelamentoIsNullOrderByDataCriacaoDesc(Long usuarioId);
 }

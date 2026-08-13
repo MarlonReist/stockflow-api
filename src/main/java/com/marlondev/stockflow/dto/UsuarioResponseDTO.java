@@ -17,6 +17,8 @@ public class UsuarioResponseDTO implements Serializable {
     private PerfilUsuario perfil;
     private StatusUsuario status;
     private Boolean conviteExpirado;
+    private Boolean podeReenviarConvite;
+    private Long segundosParaReenviarConvite;
 
     public UsuarioResponseDTO(){
     }
@@ -28,15 +30,19 @@ public class UsuarioResponseDTO implements Serializable {
         perfil = usuario.getPerfil();
         status = usuario.getStatus();
         conviteExpirado = false;
+        podeReenviarConvite = false;
+        segundosParaReenviarConvite = 0L;
     }
 
-    public UsuarioResponseDTO(Usuario usuario, Boolean conviteExpirado){
+    public UsuarioResponseDTO(Usuario usuario, Boolean conviteExpirado, Boolean podeReenviarConvite, Long segundosParaReenviarConvite){
         id = usuario.getId();
         nome = usuario.getNome();
         login = usuario.getLogin();
         perfil = usuario.getPerfil();
         status = usuario.getStatus();
         this.conviteExpirado = conviteExpirado;
+        this.podeReenviarConvite = podeReenviarConvite;
+        this.segundosParaReenviarConvite = segundosParaReenviarConvite;
     }
 
     public Long getId() {
@@ -85,5 +91,21 @@ public class UsuarioResponseDTO implements Serializable {
 
     public void setConviteExpirado(Boolean conviteExpirado) {
         this.conviteExpirado = conviteExpirado;
+    }
+
+    public Boolean getPodeReenviarConvite() {
+        return podeReenviarConvite;
+    }
+
+    public void setPodeReenviarConvite(Boolean podeReenviarConvite) {
+        this.podeReenviarConvite = podeReenviarConvite;
+    }
+
+    public Long getSegundosParaReenviarConvite() {
+        return segundosParaReenviarConvite;
+    }
+
+    public void setSegundosParaReenviarConvite(Long segundosParaReenviarConvite) {
+        this.segundosParaReenviarConvite = segundosParaReenviarConvite;
     }
 }
