@@ -9,6 +9,7 @@ import com.marlondev.stockflow.repositories.AlmoxarifadoRepository;
 import com.marlondev.stockflow.repositories.MovimentacaoEstoqueRepository;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
 import com.marlondev.stockflow.repositories.ProdutoRepository;
+import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -34,35 +35,78 @@ public class DashboardService {
         this.movimentacaoEstoqueRepository = movimentacaoEstoqueRepository;
     }
 
-    public DashboardResumoDTO buscarResumo() {
-        YearMonth mesAtual = YearMonth.now();
-        LocalDate primeiroDiaDoMes = mesAtual.atDay(1);
-        LocalDate ultimoDiaDoMes = mesAtual.atEndOfMonth();
+    private record PeriodoDashboard(LocalDate inicio, LocalDate fim) {
+    }
+
+    private PeriodoDashboard resolverPeriodo(LocalDate dataInicio, LocalDate dataFim) {
+        if (dataInicio == null && dataFim == null) {
+            YearMonth mesAtual = YearMonth.now();
+            return new PeriodoDashboard(
+                    mesAtual.atDay(1),
+                    mesAtual.atEndOfMonth()
+            );
+        }
+
+        if (dataInicio == null || dataFim == null) {
+            throw new DatabaseException("Data inicial e data final devem ser informadas juntas!");
+        }
+
+        if (dataInicio.isAfter(dataFim)) {
+            throw new DatabaseException("Data inicial não pode ser maior que a data final!");
+        }
+
+        return new PeriodoDashboard(dataInicio, dataFim);
+    }
+
+    public DashboardResumoDTO buscarResumo(LocalDate dataInicio, LocalDate dataFim) {
+        PeriodoDashboard periodo = resolverPeriodo(dataInicio, dataFim);
 
         Long totalProdutos = produtoRepository.count();
         Long almoxarifadosAtivos = almoxarifadoRepository.count();
-        Long osAbertas = ordemDeServicoRepository.countByStatus(StatusEnum.ABERTA);
+        Long osAbertas = ordemDeServicoRepository.countByStatusAndDataAberturaBetween(
+                StatusEnum.ABERTA,
+                periodo.inicio(),
+                periodo.fim()
+        );
         Long movimentacoesNoMes = movimentacaoEstoqueRepository.countByDataMovimentacaoBetween(
-                primeiroDiaDoMes,
-                ultimoDiaDoMes
+                periodo.inicio(),
+                periodo.fim()
         );
 
         return new DashboardResumoDTO(totalProdutos, almoxarifadosAtivos, osAbertas, movimentacoesNoMes);
     }
 
-    public List<DashboardMovimentacaoRecenteDTO> buscarMovimentacoesRecentes() {
-        return movimentacaoEstoqueRepository.findTop5ByOrderByDataMovimentacaoDescIdDesc()
+    public List<DashboardMovimentacaoRecenteDTO> buscarMovimentacoesRecentes(
+            LocalDate dataInicio,
+            LocalDate dataFim
+    ) {
+        PeriodoDashboard periodo = resolverPeriodo(dataInicio, dataFim);
+
+        return movimentacaoEstoqueRepository
+                .findTop5ByDataMovimentacaoBetweenOrderByDataMovimentacaoDescIdDesc(
+                        periodo.inicio(),
+                        periodo.fim()
+                )
                 .stream()
                 .map(this::toMovimentacaoRecenteDTO)
                 .collect(Collectors.toList());
     }
 
-    public List<DashboardOsPorStatusDTO> buscarOrdensDeServicoPorStatus() {
+    public List<DashboardOsPorStatusDTO> buscarOrdensDeServicoPorStatus(
+            LocalDate dataInicio,
+            LocalDate dataFim
+    ) {
+        PeriodoDashboard periodo = resolverPeriodo(dataInicio, dataFim);
+
         return List.of(StatusEnum.values())
                 .stream()
                 .map(status -> new DashboardOsPorStatusDTO(
                         status,
-                        ordemDeServicoRepository.countByStatus(status)
+                        ordemDeServicoRepository.countByStatusAndDataAberturaBetween(
+                                status,
+                                periodo.inicio(),
+                                periodo.fim()
+                        )
                 ))
                 .collect(Collectors.toList());
     }

@@ -11,4 +11,9 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
     long countByDataMovimentacaoBetween(LocalDate dataInicial, LocalDate dataFinal);
 
     List<MovimentacaoEstoque> findTop5ByOrderByDataMovimentacaoDescIdDesc();
+
+    List<MovimentacaoEstoque> findTop5ByDataMovimentacaoBetweenOrderByDataMovimentacaoDescIdDesc(
+            LocalDate dataInicial,
+            LocalDate dataFinal
+    );
 }
