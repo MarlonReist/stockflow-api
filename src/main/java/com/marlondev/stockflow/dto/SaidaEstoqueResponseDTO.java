@@ -16,6 +16,7 @@ public class SaidaEstoqueResponseDTO implements Serializable {
     private Long almoxarifadoId;
     private String almoxarifadoNome;
     private StatusEnum status;
+    private Double valorTotal;
 
     public SaidaEstoqueResponseDTO(){
     }
@@ -26,6 +27,12 @@ public class SaidaEstoqueResponseDTO implements Serializable {
         almoxarifadoId = saidaEstoque.getAlmoxarifado().getId();
         almoxarifadoNome = saidaEstoque.getAlmoxarifado().getNome();
         status = saidaEstoque.getStatus();
+        valorTotal = Math.round(
+                saidaEstoque.getItens()
+                        .stream()
+                        .mapToDouble(item -> item.getQuantidade() * item.getValorUnitario())
+                        .sum() * 100.0
+        ) / 100.0;
     }
 
     public Long getId() {
@@ -66,5 +73,13 @@ public class SaidaEstoqueResponseDTO implements Serializable {
 
     public void setStatus(StatusEnum status) {
         this.status = status;
+    }
+
+    public Double getValorTotal() {
+        return valorTotal;
+    }
+
+    public void setValorTotal(Double valorTotal) {
+        this.valorTotal = valorTotal;
     }
 }

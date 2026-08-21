@@ -5,16 +5,22 @@ public class DashboardResumoDTO {
     private Long totalProdutos;
     private Long almoxarifadosAtivos;
     private Long osAbertas;
-    private Long movimentacoesNoMes;
+    private Long movimentacoesNoPeriodo;
+    private Double valorTotalEntradasPeriodo;
+    private Double valorTotalSaidasPeriodo;
+    private Double custoTotalOrdensServicoPeriodo;
 
     public DashboardResumoDTO() {
     }
 
-    public DashboardResumoDTO(Long totalProdutos, Long almoxarifadosAtivos, Long osAbertas, Long movimentacoesNoMes) {
+    public DashboardResumoDTO(Long totalProdutos, Long almoxarifadosAtivos, Long osAbertas, Long movimentacoesNoPeriodo, Double valorTotalEntradasPeriodo, Double valorTotalSaidasPeriodo, Double custoTotalOrdensServicoPeriodo) {
         this.totalProdutos = totalProdutos;
         this.almoxarifadosAtivos = almoxarifadosAtivos;
         this.osAbertas = osAbertas;
-        this.movimentacoesNoMes = movimentacoesNoMes;
+        this.movimentacoesNoPeriodo = movimentacoesNoPeriodo;
+        this.valorTotalEntradasPeriodo = valorTotalEntradasPeriodo;
+        this.valorTotalSaidasPeriodo = valorTotalSaidasPeriodo;
+        this.custoTotalOrdensServicoPeriodo = custoTotalOrdensServicoPeriodo;
     }
 
     public Long getTotalProdutos() {
@@ -41,11 +47,35 @@ public class DashboardResumoDTO {
         this.osAbertas = osAbertas;
     }
 
-    public Long getMovimentacoesNoMes() {
-        return movimentacoesNoMes;
+    public Long getMovimentacoesNoPeriodo() {
+        return movimentacoesNoPeriodo;
     }
 
-    public void setMovimentacoesNoMes(Long movimentacoesNoMes) {
-        this.movimentacoesNoMes = movimentacoesNoMes;
+    public void setMovimentacoesNoPeriodo(Long movimentacoesNoPeriodo) {
+        this.movimentacoesNoPeriodo = movimentacoesNoPeriodo;
+    }
+
+    public Double getValorTotalEntradasPeriodo() {
+        return valorTotalEntradasPeriodo;
+    }
+
+    public void setValorTotalEntradasPeriodo(Double valorTotalEntradasPeriodo) {
+        this.valorTotalEntradasPeriodo = valorTotalEntradasPeriodo;
+    }
+
+    public Double getValorTotalSaidasPeriodo() {
+        return valorTotalSaidasPeriodo;
+    }
+
+    public void setValorTotalSaidasPeriodo(Double valorTotalSaidasPeriodo) {
+        this.valorTotalSaidasPeriodo = valorTotalSaidasPeriodo;
+    }
+
+    public Double getCustoTotalOrdensServicoPeriodo() {
+        return custoTotalOrdensServicoPeriodo;
+    }
+
+    public void setCustoTotalOrdensServicoPeriodo(Double custoTotalOrdensServicoPeriodo) {
+        this.custoTotalOrdensServicoPeriodo = custoTotalOrdensServicoPeriodo;
     }
 }

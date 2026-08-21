@@ -12,6 +12,7 @@ import com.marlondev.stockflow.dto.ConviteValidacaoResponseDTO;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -225,6 +226,7 @@ public class ConviteUsuarioService {
         }
     }
 
+    @Transactional
     public ConviteUsuarioResponseDTO reenviarConvite(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException(usuarioId));

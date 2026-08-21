@@ -18,6 +18,7 @@ public class EntradaEstoqueResponseDTO implements Serializable {
     private Long almoxarifadoId;
     private String almoxarifadoNome;
     private StatusEnum status;
+    private Double valorTotal;
 
     public EntradaEstoqueResponseDTO(){
     }
@@ -30,6 +31,12 @@ public class EntradaEstoqueResponseDTO implements Serializable {
         almoxarifadoId = entradaEstoque.getAlmoxarifado().getId();
         almoxarifadoNome = entradaEstoque.getAlmoxarifado().getNome();
         status = entradaEstoque.getStatus();
+        valorTotal = Math.round(
+                entradaEstoque.getItens()
+                        .stream()
+                        .mapToDouble(item -> item.valorTotal())
+                        .sum() * 100.0
+        ) / 100.0;
     }
 
     public Long getId() {
@@ -86,5 +93,13 @@ public class EntradaEstoqueResponseDTO implements Serializable {
 
     public void setStatus(StatusEnum status) {
         this.status = status;
+    }
+
+    public Double getValorTotal() {
+        return valorTotal;
+    }
+
+    public void setValorTotal(Double valorTotal) {
+        this.valorTotal = valorTotal;
     }
 }

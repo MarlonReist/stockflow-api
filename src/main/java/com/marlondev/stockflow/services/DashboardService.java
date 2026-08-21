@@ -5,10 +5,7 @@ import com.marlondev.stockflow.domain.enums.StatusEnum;
 import com.marlondev.stockflow.dto.DashboardMovimentacaoRecenteDTO;
 import com.marlondev.stockflow.dto.DashboardOsPorStatusDTO;
 import com.marlondev.stockflow.dto.DashboardResumoDTO;
-import com.marlondev.stockflow.repositories.AlmoxarifadoRepository;
-import com.marlondev.stockflow.repositories.MovimentacaoEstoqueRepository;
-import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
-import com.marlondev.stockflow.repositories.ProdutoRepository;
+import com.marlondev.stockflow.repositories.*;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import org.springframework.stereotype.Service;
 
@@ -24,15 +21,21 @@ public class DashboardService {
     private final AlmoxarifadoRepository almoxarifadoRepository;
     private final OrdemDeServicoRepository ordemDeServicoRepository;
     private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
+    private final EntradaItemRepository entradaItemRepository;
+    private final SaidaItemRepository saidaItemRepository;
+    private final OrdemServicoItemRepository ordemServicoItemRepository;
 
     public DashboardService(ProdutoRepository produtoRepository,
                             AlmoxarifadoRepository almoxarifadoRepository,
                             OrdemDeServicoRepository ordemDeServicoRepository,
-                            MovimentacaoEstoqueRepository movimentacaoEstoqueRepository) {
+                            MovimentacaoEstoqueRepository movimentacaoEstoqueRepository, EntradaItemRepository entradaItemRepository, SaidaItemRepository saidaItemRepository, OrdemServicoItemRepository ordemServicoItemRepository) {
         this.produtoRepository = produtoRepository;
         this.almoxarifadoRepository = almoxarifadoRepository;
         this.ordemDeServicoRepository = ordemDeServicoRepository;
         this.movimentacaoEstoqueRepository = movimentacaoEstoqueRepository;
+        this.entradaItemRepository = entradaItemRepository;
+        this.saidaItemRepository = saidaItemRepository;
+        this.ordemServicoItemRepository = ordemServicoItemRepository;
     }
 
     private record PeriodoDashboard(LocalDate inicio, LocalDate fim) {
@@ -68,12 +71,35 @@ public class DashboardService {
                 periodo.inicio(),
                 periodo.fim()
         );
-        Long movimentacoesNoMes = movimentacaoEstoqueRepository.countByDataMovimentacaoBetween(
+        Long movimentacoesNoPeriodo = movimentacaoEstoqueRepository.countByDataMovimentacaoBetween(
                 periodo.inicio(),
                 periodo.fim()
         );
 
-        return new DashboardResumoDTO(totalProdutos, almoxarifadosAtivos, osAbertas, movimentacoesNoMes);
+        Double valorTotalEntradasPeriodo = entradaItemRepository.somarValorTotalPorPeriodo(
+                periodo.inicio(),
+                periodo.fim()
+        );
+
+        Double valorTotalSaidasPeriodo = saidaItemRepository.somarValorTotalPorPeriodo(
+                periodo.inicio(),
+                periodo.fim()
+        );
+
+        Double custoTotalOrdensServicoPeriodo = ordemServicoItemRepository.somarCustoTotalPorPeriodo(
+                periodo.inicio(),
+                periodo.fim()
+        );
+
+        return new DashboardResumoDTO(
+                totalProdutos,
+                almoxarifadosAtivos,
+                osAbertas,
+                movimentacoesNoPeriodo,
+                valorTotalEntradasPeriodo,
+                valorTotalSaidasPeriodo,
+                custoTotalOrdensServicoPeriodo
+        );
     }
 
     public List<DashboardMovimentacaoRecenteDTO> buscarMovimentacoesRecentes(
