@@ -29,5 +29,14 @@ services:
     volumes:
       - ./uploads:/app/uploads
 
+  frontend:
+    build:
+      context: ../stockflow-front
+    container_name: stockflow-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
 volumes:
   mysql_data:
