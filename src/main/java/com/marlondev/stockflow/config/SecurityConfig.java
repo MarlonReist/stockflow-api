@@ -2,6 +2,7 @@ package com.marlondev.stockflow.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,6 +41,8 @@ public class SecurityConfig {
                         .requestMatchers("/convites/validar").permitAll()
                         .requestMatchers("/convites/ativar").permitAll()
                         .requestMatchers("/usuarios/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/tipos-os/ativos").authenticated()
+                        .requestMatchers("/tipos-os/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

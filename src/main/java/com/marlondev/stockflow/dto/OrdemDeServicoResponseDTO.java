@@ -19,6 +19,8 @@ public class OrdemDeServicoResponseDTO implements Serializable {
     private String colaboradorNome;
     private LocalDate dataFechamento;
     private double valorTotal;
+    private Long tipoOrdemServicoId;
+    private String tipoOrdemServicoNome;
     
     public OrdemDeServicoResponseDTO(){
     }
@@ -34,6 +36,10 @@ public class OrdemDeServicoResponseDTO implements Serializable {
         colaboradorNome = os.getColaborador().getNome();
         dataFechamento = os.getDataFechamento();
         valorTotal = os.getValorTotal();
+        if (os.getTipoOrdemServico() != null) {
+            tipoOrdemServicoId = os.getTipoOrdemServico().getId();
+            tipoOrdemServicoNome = os.getTipoOrdemServico().getNome();
+        }
     }
 
     public Long getId() {
@@ -114,5 +120,21 @@ public class OrdemDeServicoResponseDTO implements Serializable {
 
     public void setValorTotal(double valorTotal) {
         this.valorTotal = valorTotal;
+    }
+
+    public Long getTipoOrdemServicoId() {
+        return tipoOrdemServicoId;
+    }
+
+    public void setTipoOrdemServicoId(Long tipoOrdemServicoId) {
+        this.tipoOrdemServicoId = tipoOrdemServicoId;
+    }
+
+    public String getTipoOrdemServicoNome() {
+        return tipoOrdemServicoNome;
+    }
+
+    public void setTipoOrdemServicoNome(String tipoOrdemServicoNome) {
+        this.tipoOrdemServicoNome = tipoOrdemServicoNome;
     }
 }

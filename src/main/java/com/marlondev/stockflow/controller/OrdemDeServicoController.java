@@ -1,6 +1,8 @@
 package com.marlondev.stockflow.controller;
+import com.marlondev.stockflow.dto.OrdemDeServicoDescricaoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
+import com.marlondev.stockflow.dto.OrdemDeServicoTipoRequestDTO;
 import com.marlondev.stockflow.services.OrdemDeServicoService;
 import com.marlondev.stockflow.services.PdfService;
 import jakarta.validation.Valid;
@@ -48,9 +50,18 @@ public class OrdemDeServicoController {
     }
 
     @PutMapping(value = "/{id}/descricao")
-    public ResponseEntity<OrdemDeServicoResponseDTO> atualizarDescricao(@PathVariable Long id, @RequestBody @Valid OrdemDeServicoRequestDTO dto) {
+    public ResponseEntity<OrdemDeServicoResponseDTO> atualizarDescricao(@PathVariable Long id, @RequestBody @Valid OrdemDeServicoDescricaoRequestDTO dto) {
         OrdemDeServicoResponseDTO descricaoAtualizada = osService.atualizarDescricao(id, dto);
         return ResponseEntity.ok().body(descricaoAtualizada);
+    }
+
+    @PutMapping(value = "/{id}/tipo")
+    public ResponseEntity<OrdemDeServicoResponseDTO> atualizarTipo(
+            @PathVariable Long id,
+            @RequestBody @Valid OrdemDeServicoTipoRequestDTO dto
+    ) {
+        OrdemDeServicoResponseDTO tipoAtualizado = osService.atualizarTipo(id, dto);
+        return ResponseEntity.ok().body(tipoAtualizado);
     }
 
     @PatchMapping (value = "/{id}/finalizar")

@@ -6,11 +6,16 @@ import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.enums.StatusEnum;
 import com.marlondev.stockflow.dto.OrdemDeServicoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
+import com.marlondev.stockflow.dto.OrdemDeServicoTipoRequestDTO;
 import com.marlondev.stockflow.repositories.ClienteRepository;
 import com.marlondev.stockflow.repositories.ColaboradorRepository;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
+import com.marlondev.stockflow.domain.TipoOrdemServico;
+import com.marlondev.stockflow.repositories.TipoOrdemServicoRepository;
+import com.marlondev.stockflow.dto.OrdemDeServicoDescricaoRequestDTO;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
+
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +29,13 @@ public class OrdemDeServicoService {
     private final OrdemDeServicoRepository ordemDeServicoRepository;
     private final ClienteRepository clienteRepository;
     private final ColaboradorRepository colaboradorRepository;
+    private final TipoOrdemServicoRepository tipoOrdemServicoRepository;
 
-    public OrdemDeServicoService(OrdemDeServicoRepository ordemDeServicoRepository, ClienteRepository clienteRepository, ColaboradorRepository colaboradorRepository) {
+    public OrdemDeServicoService(OrdemDeServicoRepository ordemDeServicoRepository, ClienteRepository clienteRepository, ColaboradorRepository colaboradorRepository, TipoOrdemServicoRepository tipoOrdemServicoRepository) {
         this.ordemDeServicoRepository = ordemDeServicoRepository;
         this.clienteRepository = clienteRepository;
         this.colaboradorRepository = colaboradorRepository;
+        this.tipoOrdemServicoRepository = tipoOrdemServicoRepository;
     }
 
     @Transactional
@@ -37,12 +44,20 @@ public class OrdemDeServicoService {
                 .orElseThrow(() -> new ResourceNotFoundException(dto.getClienteId()));
         Colaborador colaboradorEncontrado = colaboradorRepository.findById(dto.getColaboradorId())
                 .orElseThrow(() -> new ResourceNotFoundException(dto.getColaboradorId()));
+        TipoOrdemServico tipoEncontrado = tipoOrdemServicoRepository.findById(dto.getTipoOrdemServicoId())
+                .orElseThrow(() -> new ResourceNotFoundException(dto.getTipoOrdemServicoId()));
+
+        if (!Boolean.TRUE.equals(tipoEncontrado.getAtivo())) {
+            throw new DatabaseException("Tipo de ordem de serviço está inativo!");
+        }
+
         OrdemDeServico os = new OrdemDeServico();
         os.setDescricao(dto.getDescricao());
         os.setCliente(clienteEncontrado);
         os.setColaborador(colaboradorEncontrado);
         os.setDataAbertura(LocalDate.now());
         os.setStatus(StatusEnum.ABERTA);
+        os.setTipoOrdemServico(tipoEncontrado);
         OrdemDeServico osSalva = ordemDeServicoRepository.save(os);
         return new OrdemDeServicoResponseDTO(osSalva);
     }
@@ -68,7 +83,7 @@ public class OrdemDeServicoService {
     }
 
     @Transactional
-    public OrdemDeServicoResponseDTO atualizarDescricao(Long id, OrdemDeServicoRequestDTO dto) {
+    public OrdemDeServicoResponseDTO atualizarDescricao(Long id, OrdemDeServicoDescricaoRequestDTO dto) {
         OrdemDeServico osExistente = ordemDeServicoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
 
@@ -76,6 +91,28 @@ public class OrdemDeServicoService {
             throw new DatabaseException("Ordem de serviço não está aberta!");
         }
         osExistente.setDescricao(dto.getDescricao());
+        OrdemDeServico osSalva = ordemDeServicoRepository.save(osExistente);
+        return new OrdemDeServicoResponseDTO(osSalva);
+    }
+
+    @Transactional
+    public OrdemDeServicoResponseDTO atualizarTipo(Long id, OrdemDeServicoTipoRequestDTO dto) {
+        OrdemDeServico osExistente = ordemDeServicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+
+        if (osExistente.getStatus() != StatusEnum.ABERTA) {
+            throw new DatabaseException("Ordem de serviço não está aberta!");
+        }
+
+        TipoOrdemServico tipoEncontrado = tipoOrdemServicoRepository.findById(dto.getTipoOrdemServicoId())
+                .orElseThrow(() -> new ResourceNotFoundException(dto.getTipoOrdemServicoId()));
+
+        if (!Boolean.TRUE.equals(tipoEncontrado.getAtivo())) {
+            throw new DatabaseException("Tipo de ordem de serviço está inativo!");
+        }
+
+        osExistente.setTipoOrdemServico(tipoEncontrado);
+
         OrdemDeServico osSalva = ordemDeServicoRepository.save(osExistente);
         return new OrdemDeServicoResponseDTO(osSalva);
     }

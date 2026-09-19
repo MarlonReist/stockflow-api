@@ -180,7 +180,8 @@ public class PdfService {
         tabela.addCell(celulaCampo("Data abertura", formatarData(os.getDataAbertura()), 1));
         tabela.addCell(celulaCampo("Data fechamento", formatarData(os.getDataFechamento()), 1));
         tabela.addCell(celulaCampo("Status", os.getStatus() == null ? "" : os.getStatus().name(), 1));
-        tabela.addCell(celulaCampo("T\u00e9cnico / Colaborador", nomeColaborador(os.getColaborador()), 4));
+        tabela.addCell(celulaCampo("Tipo", nomeTipoOrdemServico(os), 4));
+        tabela.addCell(celulaCampo("Técnico / Colaborador", nomeColaborador(os.getColaborador()), 4));
 
         document.add(tabela);
     }
@@ -470,6 +471,13 @@ public class PdfService {
             total += estoque.getQuantidade();
         }
         return total;
+    }
+
+    private String nomeTipoOrdemServico(OrdemDeServico os) {
+        if (os.getTipoOrdemServico() == null) {
+            return "";
+        }
+        return texto(os.getTipoOrdemServico().getNome());
     }
 
     private String nomeColaborador(Colaborador colaborador) {

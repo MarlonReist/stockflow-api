@@ -24,6 +24,9 @@ public class OrdemDeServico implements Serializable {
     private StatusEnum status;
     private String descricao;
     @ManyToOne
+    @JoinColumn(name = "tipo_ordem_servico_id")
+    private TipoOrdemServico tipoOrdemServico;
+    @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
     @ManyToOne
@@ -77,6 +80,14 @@ public class OrdemDeServico implements Serializable {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public TipoOrdemServico getTipoOrdemServico() {
+        return tipoOrdemServico;
+    }
+
+    public void setTipoOrdemServico(TipoOrdemServico tipoOrdemServico) {
+        this.tipoOrdemServico = tipoOrdemServico;
     }
 
     public Cliente getCliente() {

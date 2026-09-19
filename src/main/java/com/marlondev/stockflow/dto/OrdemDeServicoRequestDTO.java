@@ -1,6 +1,5 @@
 package com.marlondev.stockflow.dto;
 
-import com.marlondev.stockflow.domain.enums.StatusEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -11,14 +10,17 @@ public class OrdemDeServicoRequestDTO {
     private Long clienteId;
     @NotNull(message = "Colaborador é obrigatório!")
     private Long colaboradorId;
+    @NotNull(message = "Tipo de ordem de serviço é obrigatório!")
+    private Long tipoOrdemServicoId;
 
     public OrdemDeServicoRequestDTO() {
     }
 
-    public OrdemDeServicoRequestDTO(String descricao, Long clienteId, Long colaboradorId) {
+    public OrdemDeServicoRequestDTO(String descricao, Long clienteId, Long colaboradorId, Long tipoOrdemServicoId) {
         this.descricao = descricao;
         this.clienteId = clienteId;
         this.colaboradorId = colaboradorId;
+        this.tipoOrdemServicoId = tipoOrdemServicoId;
     }
 
     public String getDescricao() {
@@ -43,5 +45,13 @@ public class OrdemDeServicoRequestDTO {
 
     public void setColaboradorId(Long colaboradorId) {
         this.colaboradorId = colaboradorId;
+    }
+
+    public Long getTipoOrdemServicoId() {
+        return tipoOrdemServicoId;
+    }
+
+    public void setTipoOrdemServicoId(Long tipoOrdemServicoId) {
+        this.tipoOrdemServicoId = tipoOrdemServicoId;
     }
 }
