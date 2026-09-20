@@ -26,6 +26,10 @@ public class EntradaEstoque implements Serializable {
     @JoinColumn (name = "almoxarifado_id", nullable = false)
     private Almoxarifado almoxarifado;
     private LocalDate dataEntrada;
+    private String numeroNotaFiscal;
+    private LocalDate dataNotaFiscal;
+    private LocalDate dataRecebimento;
+    private Double valorTotalNotaFiscal;
     @Enumerated(EnumType.STRING)
     private StatusEnum status;
 
@@ -35,12 +39,18 @@ public class EntradaEstoque implements Serializable {
     public EntradaEstoque(){
     }
 
-    public EntradaEstoque(Long id, Fornecedor fornecedor, LocalDate dataEntrada, Almoxarifado almoxarifado, StatusEnum status) {
+    public EntradaEstoque(Long id, Fornecedor fornecedor, LocalDate dataEntrada, Almoxarifado almoxarifado,
+                          StatusEnum status, String numeroNotaFiscal, LocalDate dataNotaFiscal,
+                          LocalDate dataRecebimento, Double valorTotalNotaFiscal) {
         this.id = id;
         this.fornecedor = fornecedor;
         this.dataEntrada = dataEntrada;
         this.almoxarifado = almoxarifado;
         this.status = status;
+        this.numeroNotaFiscal = numeroNotaFiscal;
+        this.dataNotaFiscal = dataNotaFiscal;
+        this.dataRecebimento = dataRecebimento;
+        this.valorTotalNotaFiscal = valorTotalNotaFiscal;
     }
 
     public Long getId() {
@@ -65,6 +75,38 @@ public class EntradaEstoque implements Serializable {
 
     public void setDataEntrada(LocalDate dataEntrada) {
         this.dataEntrada = dataEntrada;
+    }
+
+    public String getNumeroNotaFiscal() {
+        return numeroNotaFiscal;
+    }
+
+    public void setNumeroNotaFiscal(String numeroNotaFiscal) {
+        this.numeroNotaFiscal = numeroNotaFiscal;
+    }
+
+    public LocalDate getDataNotaFiscal() {
+        return dataNotaFiscal;
+    }
+
+    public void setDataNotaFiscal(LocalDate dataNotaFiscal) {
+        this.dataNotaFiscal = dataNotaFiscal;
+    }
+
+    public LocalDate getDataRecebimento() {
+        return dataRecebimento;
+    }
+
+    public void setDataRecebimento(LocalDate dataRecebimento) {
+        this.dataRecebimento = dataRecebimento;
+    }
+
+    public Double getValorTotalNotaFiscal() {
+        return valorTotalNotaFiscal;
+    }
+
+    public void setValorTotalNotaFiscal(Double valorTotalNotaFiscal) {
+        this.valorTotalNotaFiscal = valorTotalNotaFiscal;
     }
 
     public Almoxarifado getAlmoxarifado() {

@@ -43,6 +43,10 @@ public class EntradaEstoqueService {
         entradaEstoque.setDataEntrada(LocalDate.now());
         entradaEstoque.setFornecedor(fornecedorEncontrado);
         entradaEstoque.setAlmoxarifado(almoxarifadoEncontrado);
+        entradaEstoque.setNumeroNotaFiscal(dto.getNumeroNotaFiscal());
+        entradaEstoque.setDataNotaFiscal(dto.getDataNotaFiscal());
+        entradaEstoque.setDataRecebimento(dto.getDataRecebimento());
+        entradaEstoque.setValorTotalNotaFiscal(dto.getValorTotalNotaFiscal());
         entradaEstoque.setStatus(StatusEnum.ABERTA);
         EntradaEstoque entradaEstoqueSalva = entradaEstoqueRepository.save(entradaEstoque);
         return new EntradaEstoqueResponseDTO(entradaEstoqueSalva);

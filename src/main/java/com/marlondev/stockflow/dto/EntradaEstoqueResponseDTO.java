@@ -19,6 +19,12 @@ public class EntradaEstoqueResponseDTO implements Serializable {
     private String almoxarifadoNome;
     private StatusEnum status;
     private Double valorTotal;
+    private String numeroNotaFiscal;
+    private LocalDate dataNotaFiscal;
+    private LocalDate dataRecebimento;
+    private Double valorTotalNotaFiscal;
+    private Double totalCalculadoItens;
+    private Double diferencaValor;
 
     public EntradaEstoqueResponseDTO(){
     }
@@ -31,12 +37,23 @@ public class EntradaEstoqueResponseDTO implements Serializable {
         almoxarifadoId = entradaEstoque.getAlmoxarifado().getId();
         almoxarifadoNome = entradaEstoque.getAlmoxarifado().getNome();
         status = entradaEstoque.getStatus();
-        valorTotal = Math.round(
+        totalCalculadoItens = Math.round(
                 entradaEstoque.getItens()
                         .stream()
                         .mapToDouble(item -> item.valorTotal())
                         .sum() * 100.0
         ) / 100.0;
+
+        valorTotal = totalCalculadoItens;
+
+        numeroNotaFiscal = entradaEstoque.getNumeroNotaFiscal();
+        dataNotaFiscal = entradaEstoque.getDataNotaFiscal();
+        dataRecebimento = entradaEstoque.getDataRecebimento();
+        valorTotalNotaFiscal = entradaEstoque.getValorTotalNotaFiscal();
+
+        if (valorTotalNotaFiscal != null) {
+            diferencaValor = Math.round((valorTotalNotaFiscal - totalCalculadoItens) * 100.0) / 100.0;
+        }
     }
 
     public Long getId() {
@@ -101,5 +118,53 @@ public class EntradaEstoqueResponseDTO implements Serializable {
 
     public void setValorTotal(Double valorTotal) {
         this.valorTotal = valorTotal;
+    }
+
+    public String getNumeroNotaFiscal() {
+        return numeroNotaFiscal;
+    }
+
+    public void setNumeroNotaFiscal(String numeroNotaFiscal) {
+        this.numeroNotaFiscal = numeroNotaFiscal;
+    }
+
+    public LocalDate getDataNotaFiscal() {
+        return dataNotaFiscal;
+    }
+
+    public void setDataNotaFiscal(LocalDate dataNotaFiscal) {
+        this.dataNotaFiscal = dataNotaFiscal;
+    }
+
+    public LocalDate getDataRecebimento() {
+        return dataRecebimento;
+    }
+
+    public void setDataRecebimento(LocalDate dataRecebimento) {
+        this.dataRecebimento = dataRecebimento;
+    }
+
+    public Double getValorTotalNotaFiscal() {
+        return valorTotalNotaFiscal;
+    }
+
+    public void setValorTotalNotaFiscal(Double valorTotalNotaFiscal) {
+        this.valorTotalNotaFiscal = valorTotalNotaFiscal;
+    }
+
+    public Double getTotalCalculadoItens() {
+        return totalCalculadoItens;
+    }
+
+    public void setTotalCalculadoItens(Double totalCalculadoItens) {
+        this.totalCalculadoItens = totalCalculadoItens;
+    }
+
+    public Double getDiferencaValor() {
+        return diferencaValor;
+    }
+
+    public void setDiferencaValor(Double diferencaValor) {
+        this.diferencaValor = diferencaValor;
     }
 }
