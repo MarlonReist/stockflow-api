@@ -200,6 +200,9 @@ public class MovimentacaoEstoqueService {
         if (mov.getOrdemDeServico() != null) {
             return "Ordem de Servi\u00e7o";
         }
+        if (mov.getAjusteEstoque() != null) {
+            return "Ajuste";
+        }
         return "";
     }
 
@@ -215,6 +218,9 @@ public class MovimentacaoEstoqueService {
         }
         if (mov.getOrdemDeServico() != null) {
             return mov.getOrdemDeServico().getId();
+        }
+        if (mov.getAjusteEstoque() != null) {
+            return mov.getAjusteEstoque().getId();
         }
         return null;
     }
@@ -339,6 +345,23 @@ public class MovimentacaoEstoqueService {
         mov.setDataMovimentacao(LocalDate.now());
         mov.setTipo(TipoMovimentacao.SAIDA);
         mov.setTransferenciaAlmoxarifado(transferenciaItem.getTransferencia());
+        movimentacaoEstoqueRepository.save(mov);
+    }
+
+    public void registrarAjuste(AjusteEstoque ajuste) {
+        MovimentacaoEstoque mov = new MovimentacaoEstoque();
+        mov.setAlmoxarifado(ajuste.getAlmoxarifado());
+        mov.setProduto(ajuste.getProduto());
+        mov.setQuantidade(ajuste.getQuantidade());
+        mov.setDataMovimentacao(LocalDate.now());
+
+        if (ajuste.getTipo() == com.marlondev.stockflow.domain.enums.TipoAjusteEstoque.AJUSTE_ENTRADA) {
+            mov.setTipo(TipoMovimentacao.AJUSTE_ENTRADA);
+        } else {
+            mov.setTipo(TipoMovimentacao.AJUSTE_SAIDA);
+        }
+
+        mov.setAjusteEstoque(ajuste);
         movimentacaoEstoqueRepository.save(mov);
     }
 }

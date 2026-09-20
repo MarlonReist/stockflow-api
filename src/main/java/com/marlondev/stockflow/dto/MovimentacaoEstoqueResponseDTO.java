@@ -23,6 +23,7 @@ public class MovimentacaoEstoqueResponseDTO implements Serializable {
     private Long saidaEstoqueId;
     private Long transferenciaAlmoxarifadoId;
     private Long ordemDeServicoId;
+    private Long ajusteEstoqueId;
 
     public MovimentacaoEstoqueResponseDTO(MovimentacaoEstoque movimentacaoEstoque){
         id = movimentacaoEstoque.getId();
@@ -44,6 +45,9 @@ public class MovimentacaoEstoqueResponseDTO implements Serializable {
         }
         if (movimentacaoEstoque.getOrdemDeServico() != null) {
             ordemDeServicoId = movimentacaoEstoque.getOrdemDeServico().getId();
+        }
+        if (movimentacaoEstoque.getAjusteEstoque() != null) {
+            ajusteEstoqueId = movimentacaoEstoque.getAjusteEstoque().getId();
         }
     }
 
@@ -141,5 +145,13 @@ public class MovimentacaoEstoqueResponseDTO implements Serializable {
 
     public void setOrdemDeServicoId(Long ordemDeServicoId) {
         this.ordemDeServicoId = ordemDeServicoId;
+    }
+
+    public Long getAjusteEstoqueId() {
+        return ajusteEstoqueId;
+    }
+
+    public void setAjusteEstoqueId(Long ajusteEstoqueId) {
+        this.ajusteEstoqueId = ajusteEstoqueId;
     }
 }

@@ -19,6 +19,7 @@ public class MovimentacaoEstoque implements Serializable {
     private Long id;
     private LocalDate dataMovimentacao;
     @Enumerated(value = EnumType.STRING)
+    @Column(columnDefinition = "varchar(50)")
     private TipoMovimentacao tipo;
     @ManyToOne
     @JoinColumn(name = "almoxarifado_id", nullable = false)
@@ -41,11 +42,17 @@ public class MovimentacaoEstoque implements Serializable {
     @ManyToOne
     @JoinColumn(name = "ordem_de_servico_id")
     private OrdemDeServico ordemDeServico;
+    @ManyToOne
+    @JoinColumn(name = "ajuste_estoque_id")
+    private AjusteEstoque ajusteEstoque;
 
     public MovimentacaoEstoque(){
     }
 
-    public MovimentacaoEstoque(Long id, LocalDate dataMovimentacao, TipoMovimentacao tipo, Almoxarifado almoxarifado, Produto produto, Integer quantidade, EntradaEstoque entradaEstoque, SaidaEstoque saidaEstoque, TransferenciaAlmoxarifado transferenciaAlmoxarifado, OrdemDeServico ordemDeServico) {
+    public MovimentacaoEstoque(Long id, LocalDate dataMovimentacao, TipoMovimentacao tipo, Almoxarifado almoxarifado,
+                               Produto produto, Integer quantidade, EntradaEstoque entradaEstoque,
+                               SaidaEstoque saidaEstoque, TransferenciaAlmoxarifado transferenciaAlmoxarifado,
+                               OrdemDeServico ordemDeServico, AjusteEstoque ajusteEstoque) {
         this.id = id;
         this.dataMovimentacao = dataMovimentacao;
         this.tipo = tipo;
@@ -56,6 +63,7 @@ public class MovimentacaoEstoque implements Serializable {
         this.saidaEstoque = saidaEstoque;
         this.transferenciaAlmoxarifado = transferenciaAlmoxarifado;
         this.ordemDeServico = ordemDeServico;
+        this.ajusteEstoque = ajusteEstoque;
     }
 
     public Long getId() {
@@ -136,6 +144,14 @@ public class MovimentacaoEstoque implements Serializable {
 
     public void setOrdemDeServico(OrdemDeServico ordemDeServico) {
         this.ordemDeServico = ordemDeServico;
+    }
+
+    public AjusteEstoque getAjusteEstoque() {
+        return ajusteEstoque;
+    }
+
+    public void setAjusteEstoque(AjusteEstoque ajusteEstoque) {
+        this.ajusteEstoque = ajusteEstoque;
     }
 
     @Override

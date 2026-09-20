@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers("/usuarios/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/tipos-os/ativos").authenticated()
                         .requestMatchers("/tipos-os/**").hasAuthority("ADMIN")
+                        .requestMatchers("/conferencias-estoque/**").hasAuthority("ADMIN")
+                        .requestMatchers("/ajustes-estoque/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
