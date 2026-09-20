@@ -6,6 +6,7 @@ import com.marlondev.stockflow.domain.Almoxarifado;
 import com.marlondev.stockflow.domain.AlmoxarifadoEstoque;
 import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.OrdemServicoItem;
+import com.marlondev.stockflow.domain.enums.TipoPessoaEnum;
 import com.marlondev.stockflow.repositories.AlmoxarifadoEstoqueRepository;
 import com.marlondev.stockflow.repositories.AlmoxarifadoRepository;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
@@ -160,8 +161,11 @@ public class PdfService {
         tabela.setSpacingAfter(8);
 
         adicionarTituloSecao(tabela, "DADOS DO CLIENTE", 4);
+        String labelDocumento = cliente.getTipoPessoa() == TipoPessoaEnum.JURIDICA ? "CNPJ" : "CPF";
+        String documento = cliente.getTipoPessoa() == TipoPessoaEnum.JURIDICA ? cliente.getCnpj() : cliente.getCpf();
+
         tabela.addCell(celulaCampo("Cliente", cliente.getNome(), 2));
-        tabela.addCell(celulaCampo("CPF", cliente.getCpf(), 1));
+        tabela.addCell(celulaCampo(labelDocumento, documento, 1));
         tabela.addCell(celulaCampo("Telefone", cliente.getTelefone(), 1));
         tabela.addCell(celulaCampo("Endere\u00e7o completo", cliente.getEndereco(), 3));
         tabela.addCell(celulaCampo("E-mail", cliente.getEmail(), 1));

@@ -1,5 +1,6 @@
 package com.marlondev.stockflow.domain;
 
+import com.marlondev.stockflow.domain.enums.TipoPessoaEnum;
 import jakarta.persistence.*;
 
 import java.io.Serial;
@@ -16,8 +17,12 @@ public class Cliente implements Serializable {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
+    @Enumerated(EnumType.STRING)
+    private TipoPessoaEnum tipoPessoa;
     private String nome;
     private String cpf;
+    private String cnpj;
+    private String responsavelContato;
     private String telefone;
     private String email;
     private LocalDate dataCadastro;
@@ -26,13 +31,23 @@ public class Cliente implements Serializable {
     public Cliente(){
     }
 
-    public Cliente(String nome, String cpf, String telefone, String email, LocalDate dataCadastro, String endereco) {
+    public Cliente(String nome, String cpf, String cnpj, String responsavelContato, String telefone, String email, LocalDate dataCadastro, String endereco) {
         this.nome = nome;
         this.cpf = cpf;
         this.telefone = telefone;
         this.email = email;
         this.dataCadastro = dataCadastro;
         this.endereco = endereco;
+        this.cnpj = cnpj;
+        this.responsavelContato = responsavelContato;
+    }
+
+    public TipoPessoaEnum getTipoPessoa() {
+        return tipoPessoa;
+    }
+
+    public void setTipoPessoa(TipoPessoaEnum tipoPessoa) {
+        this.tipoPessoa = tipoPessoa;
     }
 
     public Long getId() {
@@ -53,6 +68,22 @@ public class Cliente implements Serializable {
 
     public String getCpf() {
         return cpf;
+    }
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
+    }
+
+    public String getResponsavelContato() {
+        return responsavelContato;
+    }
+
+    public void setResponsavelContato(String responsavelContato) {
+        this.responsavelContato = responsavelContato;
     }
 
     public void setCpf(String cpf) {

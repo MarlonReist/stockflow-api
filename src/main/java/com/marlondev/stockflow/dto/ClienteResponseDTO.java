@@ -1,6 +1,7 @@
 package com.marlondev.stockflow.dto;
 
 import com.marlondev.stockflow.domain.Cliente;
+import com.marlondev.stockflow.domain.enums.TipoPessoaEnum;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -11,6 +12,9 @@ public class ClienteResponseDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long id;
+    private TipoPessoaEnum tipoPessoa;
+    private String cnpj;
+    private String responsavelContato;
     private String nome;
     private String cpf;
     private String telefone;
@@ -23,16 +27,43 @@ public class ClienteResponseDTO implements Serializable {
 
     public ClienteResponseDTO(Cliente cliente) {
         id = cliente.getId();
+        tipoPessoa = cliente.getTipoPessoa();
         nome = cliente.getNome();
         cpf = cliente.getCpf();
+        cnpj = cliente.getCnpj();
         telefone = cliente.getTelefone();
         email = cliente.getEmail();
         dataCadastro = cliente.getDataCadastro();
         endereco = cliente.getEndereco();
+        responsavelContato = cliente.getResponsavelContato();
     }
 
     public Long getId() {
         return id;
+    }
+
+    public TipoPessoaEnum getTipoPessoa() {
+        return tipoPessoa;
+    }
+
+    public void setTipoPessoa(TipoPessoaEnum tipoPessoa) {
+        this.tipoPessoa = tipoPessoa;
+    }
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
+    }
+
+    public String getResponsavelContato() {
+        return responsavelContato;
+    }
+
+    public void setResponsavelContato(String responsavelContato) {
+        this.responsavelContato = responsavelContato;
     }
 
     public void setId(Long id) {

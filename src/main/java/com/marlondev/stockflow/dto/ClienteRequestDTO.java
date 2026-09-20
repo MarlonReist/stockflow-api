@@ -2,15 +2,19 @@ package com.marlondev.stockflow.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.br.CPF;
+import com.marlondev.stockflow.domain.enums.TipoPessoaEnum;
+import jakarta.validation.constraints.NotNull;
 
 public class ClienteRequestDTO {
+    @NotNull(message = "Tipo de pessoa é obrigatório!")
+    private TipoPessoaEnum tipoPessoa;
+
     @NotBlank(message = "Nome é obrigatório!")
     private String nome;
 
-    @NotBlank(message = "CPF é obrigatório!")
-    @CPF (message =  "CPF é inválido!")
     private String cpf;
+
+    private String cnpj;
 
     @NotBlank(message = "Telefone é obrigatório!")
     private String telefone;
@@ -22,6 +26,8 @@ public class ClienteRequestDTO {
     @NotBlank (message = "Endereço é obrigatório!")
     private String endereco;
 
+    private String responsavelContato;
+
     public ClienteRequestDTO(){
     }
 
@@ -31,6 +37,22 @@ public class ClienteRequestDTO {
         this.telefone = telefone;
         this.email = email;
         this.endereco = endereco;
+    }
+
+    public TipoPessoaEnum getTipoPessoa() {
+        return tipoPessoa;
+    }
+
+    public void setTipoPessoa(TipoPessoaEnum tipoPessoa) {
+        this.tipoPessoa = tipoPessoa;
+    }
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
     }
 
     public String getNome() {
@@ -71,5 +93,13 @@ public class ClienteRequestDTO {
 
     public void setEndereco (String endereco) {
         this.endereco = endereco;
+    }
+
+    public String getResponsavelContato() {
+        return responsavelContato;
+    }
+
+    public void setResponsavelContato(String responsavelContato) {
+        this.responsavelContato = responsavelContato;
     }
 }
