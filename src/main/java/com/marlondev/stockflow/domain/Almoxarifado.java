@@ -20,15 +20,19 @@ public class Almoxarifado implements Serializable {
     @Column(unique = true)
     private String nome;
 
+    @Column(nullable = false)
+    private boolean principal = false;
+
     @OneToMany(mappedBy = "almoxarifado")
     private final List<AlmoxarifadoEstoque> estoque = new ArrayList<>();
 
     public Almoxarifado(){
     }
 
-    public Almoxarifado(Long id, String nome) {
+    public Almoxarifado(Long id, String nome, boolean principal) {
         this.id = id;
         this.nome = nome;
+        this.principal = principal;
     }
 
     public Long getId() {
@@ -49,6 +53,14 @@ public class Almoxarifado implements Serializable {
 
     public List<AlmoxarifadoEstoque> getEstoque() {
         return estoque;
+    }
+
+    public boolean isPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(boolean principal) {
+        this.principal = principal;
     }
 
     @Override

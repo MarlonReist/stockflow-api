@@ -5,6 +5,7 @@ import com.marlondev.stockflow.domain.AlmoxarifadoEstoque;
 import com.marlondev.stockflow.domain.Produto;
 import com.marlondev.stockflow.dto.AlmoxarifadoEstoqueRequestDTO;
 import com.marlondev.stockflow.dto.AlmoxarifadoEstoqueResponseDTO;
+import com.marlondev.stockflow.dto.EstoqueBaixoResponseDTO;
 import com.marlondev.stockflow.repositories.AlmoxarifadoEstoqueRepository;
 import com.marlondev.stockflow.repositories.AlmoxarifadoRepository;
 import com.marlondev.stockflow.repositories.ProdutoRepository;
@@ -75,5 +76,35 @@ public class AlmoxarifadoEstoqueService {
         existente.setQuantidade(dto.getQuantidade());
         AlmoxarifadoEstoque estoqueSalvo = almoxarifadoEstoqueRepository.save(existente);
         return new AlmoxarifadoEstoqueResponseDTO(estoqueSalvo);
+    }
+
+    public List<EstoqueBaixoResponseDTO> listarProdutosComEstoqueBaixo() {
+        Almoxarifado almoxarifadoPrincipal = almoxarifadoRepository.findByPrincipalTrue()
+                .orElseThrow(() -> new DatabaseException("Nenhum almoxarifado principal definido."));
+
+        List<Produto> produtosMonitorados = produtoRepository.findByEstoqueMinimoIsNotNull();
+
+        return produtosMonitorados.stream()
+                .map(produto -> {
+                    Integer quantidadeAtual = almoxarifadoEstoqueRepository
+                            .findByAlmoxarifadoIdAndProdutoId(almoxarifadoPrincipal.getId(), produto.getId())
+                            .map(AlmoxarifadoEstoque::getQuantidade)
+                            .orElse(0);
+
+                    if (quantidadeAtual <= produto.getEstoqueMinimo()) {
+                        return new EstoqueBaixoResponseDTO(
+                                produto.getId(),
+                                produto.getNome(),
+                                produto.getEstoqueMinimo(),
+                                quantidadeAtual,
+                                almoxarifadoPrincipal.getId(),
+                                almoxarifadoPrincipal.getNome()
+                        );
+                    }
+
+                    return null;
+                })
+                .filter(dto -> dto != null)
+                .collect(Collectors.toList());
     }
 }

@@ -11,6 +11,7 @@ public class AlmoxarifadoResponseDTO implements Serializable {
 
     private Long id;
     private String nome;
+    private boolean principal;
 
     public AlmoxarifadoResponseDTO(){
     }
@@ -18,6 +19,7 @@ public class AlmoxarifadoResponseDTO implements Serializable {
     public AlmoxarifadoResponseDTO(Almoxarifado almoxarifado){
         id = almoxarifado.getId();
         nome = almoxarifado.getNome();
+        principal = almoxarifado.isPrincipal();
     }
 
     public Long getId() {
@@ -36,4 +38,11 @@ public class AlmoxarifadoResponseDTO implements Serializable {
         this.nome = nome;
     }
 
+    public boolean isPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(boolean principal) {
+        this.principal = principal;
+    }
 }

@@ -16,6 +16,7 @@ public class ProdutoResponseDTO implements Serializable {
     private UnidadeMedida unidadeMedida;
     private Long categoriaId;
     private String categoriaNome;
+    private Integer estoqueMinimo;
 
     public ProdutoResponseDTO(){
     }
@@ -27,6 +28,7 @@ public class ProdutoResponseDTO implements Serializable {
         categoriaId = produto.getCategoria().getId();
         categoriaNome = produto.getCategoria().getNome();
         unidadeMedida = produto.getUnidadeMedida();
+        estoqueMinimo = produto.getEstoqueMinimo();
     }
 
     public Long getId() {
@@ -75,5 +77,13 @@ public class ProdutoResponseDTO implements Serializable {
 
     public void setCategoriaNome(String categoriaNome) {
         this.categoriaNome = categoriaNome;
+    }
+
+    public Integer getEstoqueMinimo() {
+        return estoqueMinimo;
+    }
+
+    public void setEstoqueMinimo(Integer estoqueMinimo) {
+        this.estoqueMinimo = estoqueMinimo;
     }
 }

@@ -26,8 +26,14 @@ public class AlmoxarifadoService {
         if (almoxarifadoRepository.findByNome(dto.getNome()).isPresent()) {
             throw new DatabaseException("Esse Almoxarifado já existe!");
         }
+
+        if (dto.isPrincipal()) {
+            almoxarifadoRepository.desmarcarTodosComoPrincipal();
+        }
+
         Almoxarifado almoxarifado = new Almoxarifado();
         almoxarifado.setNome(dto.getNome());
+        almoxarifado.setPrincipal(dto.isPrincipal());
         Almoxarifado almoxarifadoSalvo = almoxarifadoRepository.save(almoxarifado);
         return new AlmoxarifadoResponseDTO(almoxarifadoSalvo);
     }
@@ -38,8 +44,15 @@ public class AlmoxarifadoService {
         return new AlmoxarifadoResponseDTO(almoxarifado);
     }
 
+    @Transactional
     public void deletarAlmoxarifadoPorId(Long id) {
-        buscarPorId(id);
+        Almoxarifado almoxarifado = almoxarifadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+
+        if (almoxarifado.isPrincipal()) {
+            throw new DatabaseException("Defina outro almoxarifado principal antes de excluir este.");
+        }
+
         almoxarifadoRepository.deleteById(id);
     }
 
@@ -55,6 +68,11 @@ public class AlmoxarifadoService {
         Almoxarifado outroAlmoxarifado = almoxarifadoRepository.findByNome(dto.getNome()).orElse(null);
 
         if (outroAlmoxarifado == null || outroAlmoxarifado.getId().equals(existente.getId())) {
+            if (dto.isPrincipal()) {
+                almoxarifadoRepository.desmarcarTodosComoPrincipal();
+            }
+
+            existente.setPrincipal(dto.isPrincipal());
             existente.setNome(dto.getNome());
             Almoxarifado almoxarifadoSalvo = almoxarifadoRepository.save(existente);
             return new AlmoxarifadoResponseDTO(almoxarifadoSalvo);

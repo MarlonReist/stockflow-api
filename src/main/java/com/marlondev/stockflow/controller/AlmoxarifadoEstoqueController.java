@@ -2,6 +2,7 @@ package com.marlondev.stockflow.controller;
 
 import com.marlondev.stockflow.dto.AlmoxarifadoEstoqueRequestDTO;
 import com.marlondev.stockflow.dto.AlmoxarifadoEstoqueResponseDTO;
+import com.marlondev.stockflow.dto.EstoqueBaixoResponseDTO;
 import com.marlondev.stockflow.services.AlmoxarifadoEstoqueService;
 import com.marlondev.stockflow.services.PdfService;
 import jakarta.validation.Valid;
@@ -28,6 +29,12 @@ public class AlmoxarifadoEstoqueController {
     public ResponseEntity<AlmoxarifadoEstoqueResponseDTO> salvar(@RequestBody @Valid AlmoxarifadoEstoqueRequestDTO dto) {
         AlmoxarifadoEstoqueResponseDTO dtoSalvar = almoxarifadoEstoqueService.salvar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(dtoSalvar);
+    }
+
+    @GetMapping("/baixo")
+    public ResponseEntity<List<EstoqueBaixoResponseDTO>> listarProdutosComEstoqueBaixo() {
+        List<EstoqueBaixoResponseDTO> produtos = almoxarifadoEstoqueService.listarProdutosComEstoqueBaixo();
+        return ResponseEntity.ok(produtos);
     }
 
     @GetMapping (value = "/{id}")

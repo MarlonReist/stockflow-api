@@ -23,16 +23,18 @@ public class Produto implements Serializable {
     private Categoria categoria;
     @Enumerated(EnumType.STRING)
     private UnidadeMedida unidadeMedida;
+    private Integer estoqueMinimo;
 
     public Produto(){
     }
 
-    public Produto(Long id, String nome, Double preco, Categoria categoria, UnidadeMedida unidadeMedida) {
+    public Produto(Long id, String nome, Double preco, Categoria categoria, UnidadeMedida unidadeMedida, Integer estoqueMinimo) {
         this.id = id;
         this.nome = nome;
         this.preco = preco;
         this.categoria = categoria;
         this.unidadeMedida = unidadeMedida;
+        this.estoqueMinimo = estoqueMinimo;
     }
 
     public Long getId() {
@@ -73,6 +75,14 @@ public class Produto implements Serializable {
 
     public void setUnidadeMedida(UnidadeMedida unidadeMedida) {
         this.unidadeMedida = unidadeMedida;
+    }
+
+    public Integer getEstoqueMinimo() {
+        return estoqueMinimo;
+    }
+
+    public void setEstoqueMinimo(Integer estoqueMinimo) {
+        this.estoqueMinimo = estoqueMinimo;
     }
 
     @Override

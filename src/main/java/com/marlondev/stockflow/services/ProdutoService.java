@@ -38,6 +38,7 @@ public class ProdutoService {
         produto.setPreco(dto.getPreco());
         produto.setUnidadeMedida(dto.getUnidadeMedida());
         produto.setCategoria(categoriaExiste);
+        produto.setEstoqueMinimo(dto.getEstoqueMinimo());
         Produto produtoSalvo = produtoRepository.save(produto);
         return new ProdutoResponseDTO(produtoSalvo);
     }
@@ -72,6 +73,7 @@ public class ProdutoService {
             existente.setPreco(dto.getPreco());
             existente.setUnidadeMedida(dto.getUnidadeMedida());
             existente.setCategoria(categoriaExiste);
+            existente.setEstoqueMinimo(dto.getEstoqueMinimo());
             Produto produtoSalvo = produtoRepository.save(existente);
             return new ProdutoResponseDTO(produtoSalvo);
         }
