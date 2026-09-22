@@ -8,7 +8,6 @@ public class OrdemDeServicoRequestDTO {
     private String descricao;
     @NotNull(message = "Cliente é obrigatório!")
     private Long clienteId;
-    @NotNull(message = "Colaborador é obrigatório!")
     private Long colaboradorId;
     @NotNull(message = "Tipo de ordem de serviço é obrigatório!")
     private Long tipoOrdemServicoId;

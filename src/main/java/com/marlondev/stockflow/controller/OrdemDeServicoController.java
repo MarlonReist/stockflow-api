@@ -1,4 +1,6 @@
 package com.marlondev.stockflow.controller;
+import com.marlondev.stockflow.dto.OrdemDeServicoAgendamentoRequestDTO;
+import com.marlondev.stockflow.dto.OrdemDeServicoConclusaoAtendimentoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoDescricaoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
@@ -94,5 +96,29 @@ public class OrdemDeServicoController {
                 .header("Content-Disposition", "inline; filename=os-" + id + "-produtos.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
+    }
+
+    @PatchMapping(value = "/{id}/agendar")
+    public ResponseEntity<OrdemDeServicoResponseDTO> agendarOs(
+            @PathVariable Long id,
+            @RequestBody @Valid OrdemDeServicoAgendamentoRequestDTO dto
+    ) {
+        OrdemDeServicoResponseDTO osAgendada = osService.agendarOs(id, dto);
+        return ResponseEntity.ok().body(osAgendada);
+    }
+
+    @PatchMapping(value = "/{id}/iniciar")
+    public ResponseEntity<OrdemDeServicoResponseDTO> iniciarAtendimento(@PathVariable Long id) {
+        OrdemDeServicoResponseDTO osEmAtendimento = osService.iniciarAtendimento(id);
+        return ResponseEntity.ok().body(osEmAtendimento);
+    }
+
+    @PatchMapping(value = "/{id}/concluir-atendimento")
+    public ResponseEntity<OrdemDeServicoResponseDTO> concluirAtendimento(
+            @PathVariable Long id,
+            @RequestBody @Valid OrdemDeServicoConclusaoAtendimentoRequestDTO dto
+    ) {
+        OrdemDeServicoResponseDTO osAguardandoConferencia = osService.concluirAtendimento(id, dto);
+        return ResponseEntity.ok().body(osAguardandoConferencia);
     }
 }

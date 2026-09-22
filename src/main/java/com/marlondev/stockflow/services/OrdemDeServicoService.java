@@ -3,16 +3,18 @@ package com.marlondev.stockflow.services;
 import com.marlondev.stockflow.domain.Cliente;
 import com.marlondev.stockflow.domain.Colaborador;
 import com.marlondev.stockflow.domain.OrdemDeServico;
+import com.marlondev.stockflow.domain.TipoOrdemServico;
 import com.marlondev.stockflow.domain.enums.StatusEnum;
+import com.marlondev.stockflow.dto.OrdemDeServicoAgendamentoRequestDTO;
+import com.marlondev.stockflow.dto.OrdemDeServicoConclusaoAtendimentoRequestDTO;
+import com.marlondev.stockflow.dto.OrdemDeServicoDescricaoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoTipoRequestDTO;
 import com.marlondev.stockflow.repositories.ClienteRepository;
 import com.marlondev.stockflow.repositories.ColaboradorRepository;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
-import com.marlondev.stockflow.domain.TipoOrdemServico;
 import com.marlondev.stockflow.repositories.TipoOrdemServicoRepository;
-import com.marlondev.stockflow.dto.OrdemDeServicoDescricaoRequestDTO;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 
@@ -20,6 +22,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,8 +45,12 @@ public class OrdemDeServicoService {
     public OrdemDeServicoResponseDTO salvar(OrdemDeServicoRequestDTO dto) {
         Cliente clienteEncontrado = clienteRepository.findById((dto.getClienteId()))
                 .orElseThrow(() -> new ResourceNotFoundException(dto.getClienteId()));
-        Colaborador colaboradorEncontrado = colaboradorRepository.findById(dto.getColaboradorId())
-                .orElseThrow(() -> new ResourceNotFoundException(dto.getColaboradorId()));
+        Colaborador colaboradorEncontrado = null;
+
+        if (dto.getColaboradorId() != null) {
+            colaboradorEncontrado = colaboradorRepository.findById(dto.getColaboradorId())
+                    .orElseThrow(() -> new ResourceNotFoundException(dto.getColaboradorId()));
+        }
         TipoOrdemServico tipoEncontrado = tipoOrdemServicoRepository.findById(dto.getTipoOrdemServicoId())
                 .orElseThrow(() -> new ResourceNotFoundException(dto.getTipoOrdemServicoId()));
 
@@ -122,11 +129,13 @@ public class OrdemDeServicoService {
         OrdemDeServico osExistente = ordemDeServicoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
 
-        if (osExistente.getStatus() != StatusEnum.ABERTA) {
-            throw new DatabaseException("Ordem de serviço não está aberta!");
+        if (osExistente.getStatus() != StatusEnum.AGUARDANDO_CONFERENCIA) {
+            throw new DatabaseException("Ordem de serviço precisa estar aguardando conferência para ser finalizada!");
         }
+
         osExistente.setStatus(StatusEnum.FINALIZADA);
-        osExistente.setDataFechamento(LocalDate.now());
+        osExistente.setDataFechamento(LocalDateTime.now());
+
         OrdemDeServico osSalva = ordemDeServicoRepository.save(osExistente);
         return new OrdemDeServicoResponseDTO(osSalva);
     }
@@ -136,12 +145,69 @@ public class OrdemDeServicoService {
         OrdemDeServico osExistente = ordemDeServicoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
 
-        if (osExistente.getStatus() != StatusEnum.ABERTA) {
-            throw new DatabaseException("Ordem de serviço não está aberta!");
+        if (osExistente.getStatus() != StatusEnum.ABERTA
+                && osExistente.getStatus() != StatusEnum.AGENDADA) {
+            throw new DatabaseException("Ordem de serviço só pode ser cancelada quando estiver aberta ou agendada!");
         }
+
         osExistente.setStatus(StatusEnum.CANCELADA);
-        osExistente.setDataFechamento(LocalDate.now());
+        osExistente.setDataFechamento(LocalDateTime.now());
+
         OrdemDeServico osSalva = ordemDeServicoRepository.save(osExistente);
         return new OrdemDeServicoResponseDTO(osSalva);
     }
+
+    @Transactional
+    public OrdemDeServicoResponseDTO agendarOs(Long id, OrdemDeServicoAgendamentoRequestDTO dto) {
+        OrdemDeServico osExistente = ordemDeServicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+
+        if (osExistente.getStatus() != StatusEnum.ABERTA) {
+            throw new DatabaseException("Ordem de serviço precisa estar aberta para ser agendada!");
+        }
+
+        Colaborador colaboradorEncontrado = colaboradorRepository.findById(dto.getColaboradorId())
+                .orElseThrow(() -> new ResourceNotFoundException(dto.getColaboradorId()));
+
+        osExistente.setColaborador(colaboradorEncontrado);
+        osExistente.setDataAgendada(dto.getDataAgendada());
+        osExistente.setStatus(StatusEnum.AGENDADA);
+
+        OrdemDeServico osSalva = ordemDeServicoRepository.save(osExistente);
+        return new OrdemDeServicoResponseDTO(osSalva);
+    }
+
+    @Transactional
+    public OrdemDeServicoResponseDTO iniciarAtendimento(Long id) {
+        OrdemDeServico osExistente = ordemDeServicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+
+        if (osExistente.getStatus() != StatusEnum.AGENDADA) {
+            throw new DatabaseException("Ordem de serviço precisa estar agendada para iniciar atendimento!");
+        }
+
+        osExistente.setInicioAtendimento(LocalDateTime.now());
+        osExistente.setStatus(StatusEnum.EM_ATENDIMENTO);
+
+        OrdemDeServico osSalva = ordemDeServicoRepository.save(osExistente);
+        return new OrdemDeServicoResponseDTO(osSalva);
+    }
+
+    @Transactional
+    public OrdemDeServicoResponseDTO concluirAtendimento(Long id, OrdemDeServicoConclusaoAtendimentoRequestDTO dto) {
+        OrdemDeServico osExistente = ordemDeServicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+
+        if (osExistente.getStatus() != StatusEnum.EM_ATENDIMENTO) {
+            throw new DatabaseException("Ordem de serviço precisa estar em atendimento para ser concluída!");
+        }
+
+        osExistente.setFimAtendimento(LocalDateTime.now());
+        osExistente.setObservacaoConclusao(dto.getObservacaoConclusao());
+        osExistente.setStatus(StatusEnum.AGUARDANDO_CONFERENCIA);
+
+        OrdemDeServico osSalva = ordemDeServicoRepository.save(osExistente);
+        return new OrdemDeServicoResponseDTO(osSalva);
+    }
+
 }

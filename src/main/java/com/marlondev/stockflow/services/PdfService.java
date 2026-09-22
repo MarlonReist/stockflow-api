@@ -30,6 +30,7 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -182,7 +183,7 @@ public class PdfService {
         adicionarTituloSecao(tabela, "DADOS DA OS", 4);
         tabela.addCell(celulaCampo("ID", String.valueOf(os.getId()), 1));
         tabela.addCell(celulaCampo("Data abertura", formatarData(os.getDataAbertura()), 1));
-        tabela.addCell(celulaCampo("Data fechamento", formatarData(os.getDataFechamento()), 1));
+        tabela.addCell(celulaCampo("Data fechamento", formatarDataHora(os.getDataFechamento()), 1));
         tabela.addCell(celulaCampo("Status", os.getStatus() == null ? "" : os.getStatus().name(), 1));
         tabela.addCell(celulaCampo("Tipo", nomeTipoOrdemServico(os), 4));
         tabela.addCell(celulaCampo("Técnico / Colaborador", nomeColaborador(os.getColaborador()), 4));
@@ -455,6 +456,10 @@ public class PdfService {
 
     private String formatarData(LocalDate data) {
         return data == null ? "" : data.format(DATA_FORMATTER);
+    }
+
+    private String formatarDataHora(LocalDateTime data) {
+        return data == null ? "" : data.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 
     private String formatarMoeda(Double valor) {

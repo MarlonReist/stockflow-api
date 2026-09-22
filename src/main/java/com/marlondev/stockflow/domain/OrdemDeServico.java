@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,6 +22,7 @@ public class OrdemDeServico implements Serializable {
     private Long id;
     private LocalDate dataAbertura;
     @Enumerated(value = EnumType.STRING)
+    @Column(columnDefinition = "varchar(50)")
     private StatusEnum status;
     private String descricao;
     @ManyToOne
@@ -30,9 +32,17 @@ public class OrdemDeServico implements Serializable {
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
     @ManyToOne
-    @JoinColumn(name = "colaborador_id", nullable = false)
+    @JoinColumn(name = "colaborador_id")
     private Colaborador colaborador;
-    private LocalDate dataFechamento;
+    private LocalDateTime dataFechamento;
+
+    private LocalDateTime dataAgendada;
+    private LocalDateTime inicioAtendimento;
+    private LocalDateTime fimAtendimento;
+
+    @Column(length = 1000)
+    private String observacaoConclusao;
+
     @OneToMany(mappedBy = "ordemDeServico")
     private final List<OrdemServicoItem> items = new ArrayList<>();
 
@@ -40,7 +50,10 @@ public class OrdemDeServico implements Serializable {
     public OrdemDeServico() {
     }
 
-    public OrdemDeServico(Long id, LocalDate dataAbertura, StatusEnum status, String descricao, Cliente cliente, Colaborador colaborador, LocalDate dataFechamento) {
+    public OrdemDeServico(Long id, LocalDate dataAbertura, StatusEnum status, String descricao,
+                          Cliente cliente, Colaborador colaborador, LocalDateTime dataFechamento,
+                          LocalDateTime dataAgendada, LocalDateTime inicioAtendimento,
+                          LocalDateTime fimAtendimento, String observacaoConclusao) {
         this.id = id;
         this.dataAbertura = dataAbertura;
         this.status = status;
@@ -48,6 +61,10 @@ public class OrdemDeServico implements Serializable {
         this.cliente = cliente;
         this.colaborador = colaborador;
         this.dataFechamento = dataFechamento;
+        this.dataAgendada = dataAgendada;
+        this.inicioAtendimento = inicioAtendimento;
+        this.fimAtendimento = fimAtendimento;
+        this.observacaoConclusao = observacaoConclusao;
     }
 
     public Long getId() {
@@ -106,12 +123,44 @@ public class OrdemDeServico implements Serializable {
         this.colaborador = colaborador;
     }
 
-    public LocalDate getDataFechamento() {
+    public LocalDateTime getDataFechamento() {
         return dataFechamento;
     }
 
-    public void setDataFechamento(LocalDate dataFechamento) {
+    public void setDataFechamento(LocalDateTime dataFechamento) {
         this.dataFechamento = dataFechamento;
+    }
+
+    public LocalDateTime getDataAgendada() {
+        return dataAgendada;
+    }
+
+    public void setDataAgendada(LocalDateTime dataAgendada) {
+        this.dataAgendada = dataAgendada;
+    }
+
+    public LocalDateTime getInicioAtendimento() {
+        return inicioAtendimento;
+    }
+
+    public void setInicioAtendimento(LocalDateTime inicioAtendimento) {
+        this.inicioAtendimento = inicioAtendimento;
+    }
+
+    public LocalDateTime getFimAtendimento() {
+        return fimAtendimento;
+    }
+
+    public void setFimAtendimento(LocalDateTime fimAtendimento) {
+        this.fimAtendimento = fimAtendimento;
+    }
+
+    public String getObservacaoConclusao() {
+        return observacaoConclusao;
+    }
+
+    public void setObservacaoConclusao(String observacaoConclusao) {
+        this.observacaoConclusao = observacaoConclusao;
     }
 
     public List<OrdemServicoItem> getItems() {
