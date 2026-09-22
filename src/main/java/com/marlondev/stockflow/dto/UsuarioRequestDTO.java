@@ -15,13 +15,16 @@ public class UsuarioRequestDTO {
     @NotNull
     private PerfilUsuario perfil;
 
+    private Long colaboradorId;
+
     public UsuarioRequestDTO(){
     }
 
-    public UsuarioRequestDTO(String nome, String login, PerfilUsuario perfil) {
+    public UsuarioRequestDTO(String nome, String login, PerfilUsuario perfil, Long colaboradorId) {
         this.nome = nome;
         this.login = login;
         this.perfil = perfil;
+        this.colaboradorId = colaboradorId;
     }
 
     public String getNome() {
@@ -46,5 +49,13 @@ public class UsuarioRequestDTO {
 
     public void setPerfil(PerfilUsuario perfil) {
         this.perfil = perfil;
+    }
+
+    public Long getColaboradorId() {
+        return colaboradorId;
+    }
+
+    public void setColaboradorId(Long colaboradorId) {
+        this.colaboradorId = colaboradorId;
     }
 }

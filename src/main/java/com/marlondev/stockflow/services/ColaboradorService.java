@@ -4,6 +4,7 @@ import com.marlondev.stockflow.domain.Colaborador;
 import com.marlondev.stockflow.dto.ColaboradorRequestDTO;
 import com.marlondev.stockflow.dto.ColaboradorResponseDTO;
 import com.marlondev.stockflow.repositories.ColaboradorRepository;
+import com.marlondev.stockflow.repositories.UsuarioRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
@@ -16,10 +17,12 @@ import java.util.stream.Collectors;
 public class ColaboradorService {
 
     private final ColaboradorRepository colaboradorRepository;
+    private final UsuarioRepository usuarioRepository;
 
 
-    public ColaboradorService(ColaboradorRepository colaboradorRepository) {
+    public ColaboradorService(ColaboradorRepository colaboradorRepository, UsuarioRepository usuarioRepository) {
         this.colaboradorRepository = colaboradorRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Transactional
@@ -44,9 +47,13 @@ public class ColaboradorService {
 
     public void deletarColaboradorPorId(Long id){
         buscarPorId(id);
+
+        if (usuarioRepository.existsByColaboradorId(id)) {
+            throw new DatabaseException("Não é possível excluir colaborador vinculado a um usuário.");
+        }
+
         colaboradorRepository.deleteById(id);
     }
-
     public List<ColaboradorResponseDTO> listarTodos(){
         List<Colaborador> list = colaboradorRepository.findAll();
         return list.stream().map(ColaboradorResponseDTO::new).collect(Collectors.toList());

@@ -19,6 +19,8 @@ public class UsuarioResponseDTO implements Serializable {
     private Boolean conviteExpirado;
     private Boolean podeReenviarConvite;
     private Long segundosParaReenviarConvite;
+    private Long colaboradorId;
+    private String colaboradorNome;
 
     public UsuarioResponseDTO(){
     }
@@ -32,6 +34,10 @@ public class UsuarioResponseDTO implements Serializable {
         conviteExpirado = false;
         podeReenviarConvite = false;
         segundosParaReenviarConvite = 0L;
+        if (usuario.getColaborador() != null) {
+            colaboradorId = usuario.getColaborador().getId();
+            colaboradorNome = usuario.getColaborador().getNome();
+        }
     }
 
     public UsuarioResponseDTO(Usuario usuario, Boolean conviteExpirado, Boolean podeReenviarConvite, Long segundosParaReenviarConvite){
@@ -43,6 +49,10 @@ public class UsuarioResponseDTO implements Serializable {
         this.conviteExpirado = conviteExpirado;
         this.podeReenviarConvite = podeReenviarConvite;
         this.segundosParaReenviarConvite = segundosParaReenviarConvite;
+        if (usuario.getColaborador() != null) {
+            colaboradorId = usuario.getColaborador().getId();
+            colaboradorNome = usuario.getColaborador().getNome();
+        }
     }
 
     public Long getId() {
@@ -107,5 +117,21 @@ public class UsuarioResponseDTO implements Serializable {
 
     public void setSegundosParaReenviarConvite(Long segundosParaReenviarConvite) {
         this.segundosParaReenviarConvite = segundosParaReenviarConvite;
+    }
+
+    public Long getColaboradorId() {
+        return colaboradorId;
+    }
+
+    public void setColaboradorId(Long colaboradorId) {
+        this.colaboradorId = colaboradorId;
+    }
+
+    public String getColaboradorNome() {
+        return colaboradorNome;
+    }
+
+    public void setColaboradorNome(String colaboradorNome) {
+        this.colaboradorNome = colaboradorNome;
     }
 }

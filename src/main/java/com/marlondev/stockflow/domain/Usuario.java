@@ -22,21 +22,27 @@ public class Usuario implements Serializable {
     private String login;
     private String senha;
     @Enumerated(value = EnumType.STRING)
+    @Column(columnDefinition = "varchar(30)")
     private PerfilUsuario perfil;
     @Enumerated(value = EnumType.STRING)
     @Column(nullable = false)
     private StatusUsuario status;
+    @OneToOne
+    @JoinColumn(name = "colaborador_id", unique = true)
+    private Colaborador colaborador;
 
     public Usuario(){
     }
 
-    public Usuario(Long id, String nome, String login, String senha, PerfilUsuario perfil, StatusUsuario status) {
+    public Usuario(Long id, String nome, String login, String senha, PerfilUsuario perfil,
+                   StatusUsuario status, Colaborador colaborador) {
         this.id = id;
         this.nome = nome;
         this.login = login;
         this.senha = senha;
         this.perfil = perfil;
         this.status = status;
+        this.colaborador = colaborador;
     }
 
     public Long getId() {
@@ -85,6 +91,14 @@ public class Usuario implements Serializable {
 
     public void setStatus(StatusUsuario status) {
         this.status = status;
+    }
+
+    public Colaborador getColaborador() {
+        return colaborador;
+    }
+
+    public void setColaborador(Colaborador colaborador) {
+        this.colaborador = colaborador;
     }
 
     @Override

@@ -7,6 +7,9 @@ import com.marlondev.stockflow.repositories.ConviteUsuarioRepository;
 import com.marlondev.stockflow.repositories.UsuarioRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
+import com.marlondev.stockflow.domain.Colaborador;
+import com.marlondev.stockflow.domain.enums.PerfilUsuario;
+import com.marlondev.stockflow.repositories.ColaboradorRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,11 +29,14 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final ConviteUsuarioRepository conviteUsuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ColaboradorRepository colaboradorRepository;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, ConviteUsuarioRepository conviteUsuarioRepository, PasswordEncoder passwordEncoder) {
+
+    public UsuarioService(UsuarioRepository usuarioRepository, ConviteUsuarioRepository conviteUsuarioRepository, PasswordEncoder passwordEncoder, ColaboradorRepository colaboradorRepository) {
         this.usuarioRepository = usuarioRepository;
         this.conviteUsuarioRepository = conviteUsuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.colaboradorRepository = colaboradorRepository;
     }
 
     @Transactional
@@ -44,6 +50,11 @@ public class UsuarioService {
         usuario.setLogin(dto.getLogin());
         usuario.setPerfil(dto.getPerfil());
         usuario.setStatus(StatusUsuario.CONVIDADO);
+        Colaborador colaborador = buscarColaboradorParaUsuario(dto.getColaboradorId());
+        validarPerfilTecnico(dto.getPerfil(), colaborador);
+        validarColaboradorDisponivelParaNovoUsuario(dto.getColaboradorId());
+
+        usuario.setColaborador(colaborador);
 
         Usuario usuarioSalvo = usuarioRepository.save(usuario);
         return toResponseDTO(usuarioSalvo);
@@ -106,7 +117,12 @@ public class UsuarioService {
 
         Usuario outroUsuario = usuarioRepository.findByLogin(dto.getLogin()).orElse(null);
 
+        Colaborador colaborador = buscarColaboradorParaUsuario(dto.getColaboradorId());
+        validarPerfilTecnico(dto.getPerfil(), colaborador);
+        validarColaboradorDisponivelParaUsuarioExistente(dto.getColaboradorId(), usuarioExistente.getId());
+
         if (outroUsuario == null || outroUsuario.getId().equals(usuarioExistente.getId())) {
+            usuarioExistente.setColaborador(colaborador);
             usuarioExistente.setNome(dto.getNome());
             usuarioExistente.setLogin(dto.getLogin());
             usuarioExistente.setPerfil(dto.getPerfil());
@@ -188,6 +204,33 @@ public class UsuarioService {
                     return Duration.between(agora, proximoReenvioPermitido).getSeconds();
                 })
                 .orElse(0L);
+    }
+
+    private Colaborador buscarColaboradorParaUsuario(Long colaboradorId) {
+        if (colaboradorId == null) {
+            return null;
+        }
+
+        return colaboradorRepository.findById(colaboradorId)
+                .orElseThrow(() -> new ResourceNotFoundException(colaboradorId));
+    }
+
+    private void validarPerfilTecnico(PerfilUsuario perfil, Colaborador colaborador) {
+        if (perfil == PerfilUsuario.TECNICO && colaborador == null) {
+            throw new DatabaseException("Usuários com perfil TECNICO devem possuir um colaborador vinculado.");
+        }
+    }
+
+    private void validarColaboradorDisponivelParaNovoUsuario(Long colaboradorId) {
+        if (colaboradorId != null && usuarioRepository.existsByColaboradorId(colaboradorId)) {
+            throw new DatabaseException("Colaborador já está vinculado a outro usuário.");
+        }
+    }
+
+    private void validarColaboradorDisponivelParaUsuarioExistente(Long colaboradorId, Long usuarioId) {
+        if (colaboradorId != null && usuarioRepository.existsByColaboradorIdAndIdNot(colaboradorId, usuarioId)) {
+            throw new DatabaseException("Colaborador já está vinculado a outro usuário.");
+        }
     }
 
     private UsuarioResponseDTO toResponseDTO(Usuario usuario) {

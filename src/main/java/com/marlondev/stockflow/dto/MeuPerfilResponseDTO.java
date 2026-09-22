@@ -11,6 +11,8 @@ public class MeuPerfilResponseDTO {
     private String login;
     private PerfilUsuario perfil;
     private StatusUsuario status;
+    private Long colaboradorId;
+    private String colaboradorNome;
 
     public MeuPerfilResponseDTO() {
     }
@@ -21,6 +23,10 @@ public class MeuPerfilResponseDTO {
         this.login = usuario.getLogin();
         this.perfil = usuario.getPerfil();
         this.status = usuario.getStatus();
+        if (usuario.getColaborador() != null) {
+            this.colaboradorId = usuario.getColaborador().getId();
+            this.colaboradorNome = usuario.getColaborador().getNome();
+        }
     }
 
     public Long getId() {
@@ -41,5 +47,13 @@ public class MeuPerfilResponseDTO {
 
     public StatusUsuario getStatus() {
         return status;
+    }
+
+    public Long getColaboradorId() {
+        return colaboradorId;
+    }
+
+    public String getColaboradorNome() {
+        return colaboradorNome;
     }
 }

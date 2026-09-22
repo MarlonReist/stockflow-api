@@ -1,6 +1,9 @@
 package com.marlondev.stockflow.services;
 
+import com.marlondev.stockflow.domain.Colaborador;
+import com.marlondev.stockflow.domain.enums.PerfilUsuario;
 import com.marlondev.stockflow.dto.AtivarConviteRequestDTO;
+import com.marlondev.stockflow.repositories.ColaboradorRepository;
 import com.marlondev.stockflow.repositories.ConviteUsuarioRepository;
 import com.marlondev.stockflow.repositories.UsuarioRepository;
 import com.marlondev.stockflow.domain.enums.StatusUsuario;
@@ -39,12 +42,14 @@ public class ConviteUsuarioService {
     private final ConviteUsuarioRepository conviteUsuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final ColaboradorRepository colaboradorRepository;
 
-    public ConviteUsuarioService(UsuarioRepository usuarioRepository, ConviteUsuarioRepository conviteUsuarioRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
+    public ConviteUsuarioService(UsuarioRepository usuarioRepository, ConviteUsuarioRepository conviteUsuarioRepository, PasswordEncoder passwordEncoder, EmailService emailService, ColaboradorRepository colaboradorRepository) {
         this.usuarioRepository = usuarioRepository;
         this.conviteUsuarioRepository = conviteUsuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.colaboradorRepository = colaboradorRepository;
     }
 
     public ConviteUsuarioResponseDTO convidarUsuario(UsuarioRequestDTO dto) {
@@ -58,6 +63,11 @@ public class ConviteUsuarioService {
         usuario.setPerfil(dto.getPerfil());
         usuario.setStatus(StatusUsuario.CONVIDADO);
         usuario.setSenha(null);
+        Colaborador colaborador = buscarColaboradorParaUsuario(dto.getColaboradorId());
+        validarPerfilTecnico(dto.getPerfil(), colaborador);
+        validarColaboradorDisponivelParaNovoUsuario(dto.getColaboradorId());
+
+        usuario.setColaborador(colaborador);
 
         usuario = usuarioRepository.save(usuario);
 
@@ -252,6 +262,27 @@ public class ConviteUsuarioService {
                 usuario.getStatus(),
                 token
         );
+    }
+
+    private Colaborador buscarColaboradorParaUsuario(Long colaboradorId) {
+        if (colaboradorId == null) {
+            return null;
+        }
+
+        return colaboradorRepository.findById(colaboradorId)
+                .orElseThrow(() -> new ResourceNotFoundException(colaboradorId));
+    }
+
+    private void validarPerfilTecnico(PerfilUsuario perfil, Colaborador colaborador) {
+        if (perfil == PerfilUsuario.TECNICO && colaborador == null) {
+            throw new DatabaseException("Usuários com perfil TECNICO devem possuir um colaborador vinculado.");
+        }
+    }
+
+    private void validarColaboradorDisponivelParaNovoUsuario(Long colaboradorId) {
+        if (colaboradorId != null && usuarioRepository.existsByColaboradorId(colaboradorId)) {
+            throw new DatabaseException("Colaborador já está vinculado a outro usuário.");
+        }
     }
 
     private String montarLinkAtivacao(String token) {
