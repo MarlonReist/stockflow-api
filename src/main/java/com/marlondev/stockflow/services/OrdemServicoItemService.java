@@ -35,6 +35,27 @@ public class OrdemServicoItemService {
 
     @Transactional
     public OrdemServicoItemResponseDTO salvar(OrdemServicoItemRequestDTO dto) {
+        return salvarComStatusPermitido(
+                dto,
+                StatusEnum.ABERTA,
+                "Ordem de serviço não está aberta!"
+        );
+    }
+
+    @Transactional
+    public OrdemServicoItemResponseDTO salvarDuranteAtendimento(OrdemServicoItemRequestDTO dto) {
+        return salvarComStatusPermitido(
+                dto,
+                StatusEnum.EM_ATENDIMENTO,
+                "Ordem de serviço precisa estar em atendimento para adicionar produto!"
+        );
+    }
+
+    private OrdemServicoItemResponseDTO salvarComStatusPermitido(
+            OrdemServicoItemRequestDTO dto,
+            StatusEnum statusPermitido,
+            String mensagemStatusInvalido
+    ) {
         OrdemDeServico osExistente = ordemDeServicoRepository.findById(dto.getOsId())
                 .orElseThrow(() -> new ResourceNotFoundException(dto.getOsId()));
 
@@ -44,28 +65,34 @@ public class OrdemServicoItemService {
         Produto produtoExistente = produtoRepository.findById(dto.getProdutoId())
                 .orElseThrow(() -> new ResourceNotFoundException(dto.getProdutoId()));
 
-        AlmoxarifadoEstoque estoque = estoqueRepository.findByAlmoxarifadoIdAndProdutoId(almoxarifadoEncontrado.getId(),produtoExistente.getId())
+        AlmoxarifadoEstoque estoque = estoqueRepository.findByAlmoxarifadoIdAndProdutoId(
+                        almoxarifadoEncontrado.getId(),
+                        produtoExistente.getId()
+                )
                 .orElseThrow(() -> new DatabaseException("Não existe estoque desse produto nesse almoxarifado"));
 
-
-        if (osExistente.getStatus() != StatusEnum.ABERTA) {
-            throw new DatabaseException("Ordem de serviço não está aberta!");
+        if (osExistente.getStatus() != statusPermitido) {
+            throw new DatabaseException(mensagemStatusInvalido);
         }
 
         if (dto.getQuantidade() > estoque.getQuantidade()) {
             throw new DatabaseException("Quantidade insuficiente em estoque!");
         }
-            OrdemServicoItem ordemItem = new OrdemServicoItem();
-            ordemItem.setQuantidade(dto.getQuantidade());
-            ordemItem.setValorUnitario(produtoExistente.getPreco());
-            ordemItem.setAlmoxarifado(almoxarifadoEncontrado);
-            ordemItem.setOrdemDeServico(osExistente);
-            ordemItem.setProduto(produtoExistente);
-            estoque.setQuantidade(estoque.getQuantidade() - dto.getQuantidade());
-            estoqueRepository.save(estoque);
-            OrdemServicoItem ordemItemSalvo = ordemItemRepository.save(ordemItem);
-            movimentacaoEstoqueService.registrarSaidaPorOrdemDeServico(ordemItemSalvo);
-            return new OrdemServicoItemResponseDTO(ordemItemSalvo);
+
+        OrdemServicoItem ordemItem = new OrdemServicoItem();
+        ordemItem.setQuantidade(dto.getQuantidade());
+        ordemItem.setValorUnitario(produtoExistente.getPreco());
+        ordemItem.setAlmoxarifado(almoxarifadoEncontrado);
+        ordemItem.setOrdemDeServico(osExistente);
+        ordemItem.setProduto(produtoExistente);
+
+        estoque.setQuantidade(estoque.getQuantidade() - dto.getQuantidade());
+        estoqueRepository.save(estoque);
+
+        OrdemServicoItem ordemItemSalvo = ordemItemRepository.save(ordemItem);
+        movimentacaoEstoqueService.registrarSaidaPorOrdemDeServico(ordemItemSalvo);
+
+        return new OrdemServicoItemResponseDTO(ordemItemSalvo);
     }
 
     public OrdemServicoItemResponseDTO buscarPorId(Long id) {
@@ -77,16 +104,41 @@ public class OrdemServicoItemService {
 
     @Transactional
     public void deletarOrdemServicoItemPorId(Long id) {
-        OrdemServicoItem osItem = ordemItemRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(id));
+        deletarComStatusPermitido(
+                id,
+                StatusEnum.ABERTA,
+                "Ordem de Serviço não está aberta!"
+        );
+    }
 
-        if (osItem.getOrdemDeServico().getStatus() != StatusEnum.ABERTA) {
-            throw new DatabaseException("Ordem de Serviço não está aberta!");
+    @Transactional
+    public void deletarDuranteAtendimento(Long itemId) {
+        deletarComStatusPermitido(
+                itemId,
+                StatusEnum.EM_ATENDIMENTO,
+                "Ordem de serviço precisa estar em atendimento para remover produto!"
+        );
+    }
+
+    private void deletarComStatusPermitido(
+            Long itemId,
+            StatusEnum statusPermitido,
+            String mensagemStatusInvalido
+    ) {
+        OrdemServicoItem osItem = ordemItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException(itemId));
+
+        if (osItem.getOrdemDeServico().getStatus() != statusPermitido) {
+            throw new DatabaseException(mensagemStatusInvalido);
         }
 
         Integer devolucao = osItem.getQuantidade();
-        AlmoxarifadoEstoque estoqueAntigo = estoqueRepository.findByAlmoxarifadoIdAndProdutoId(osItem.getAlmoxarifado().getId(),osItem.getProduto().getId())
+        AlmoxarifadoEstoque estoqueAntigo = estoqueRepository.findByAlmoxarifadoIdAndProdutoId(
+                        osItem.getAlmoxarifado().getId(),
+                        osItem.getProduto().getId()
+                )
                 .orElseThrow(() -> new ResourceNotFoundException("Não existe estoque desse produto nesse almoxarifado"));
+
         estoqueAntigo.setQuantidade(estoqueAntigo.getQuantidade() + devolucao);
 
         estoqueRepository.save(estoqueAntigo);

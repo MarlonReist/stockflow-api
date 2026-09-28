@@ -45,6 +45,8 @@ public class SecurityConfig {
                         .requestMatchers("/tipos-os/**").hasAuthority("ADMIN")
                         .requestMatchers("/conferencias-estoque/**").hasAuthority("ADMIN")
                         .requestMatchers("/ajustes-estoque/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/almoxarifados/**").authenticated()
+                        .requestMatchers("/almoxarifados/**").hasAuthority("ADMIN")
                         .requestMatchers("/tecnico/**").hasAuthority("TECNICO")
                         .anyRequest().authenticated()
                 )

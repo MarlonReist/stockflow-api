@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrdemServicoItemRepository extends JpaRepository<OrdemServicoItem, Long> {
 
@@ -22,4 +23,6 @@ public interface OrdemServicoItemRepository extends JpaRepository<OrdemServicoIt
             @Param("dataInicio") LocalDate dataInicio,
             @Param("dataFim") LocalDate dataFim
     );
+
+    Optional<OrdemServicoItem> findByIdAndOrdemDeServicoId(Long id, Long osId);
 }
