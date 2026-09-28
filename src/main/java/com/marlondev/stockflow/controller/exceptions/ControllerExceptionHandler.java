@@ -1,20 +1,16 @@
 package com.marlondev.stockflow.controller.exceptions;
 
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
+import com.marlondev.stockflow.services.exceptions.ForbiddenException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.Instant;
-import java.util.List;
 
 @ControllerAdvice
 public class ControllerExceptionHandler {
@@ -41,6 +37,14 @@ public class ControllerExceptionHandler {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         String mensagem = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
         StandardError err = new StandardError(Instant.now(), status.value(), error, mensagem, request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<StandardError> acessoNegado(ForbiddenException e, HttpServletRequest request) {
+        String error = "ForbiddenException";
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        StandardError err = new StandardError(Instant.now(), status.value(), error, e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
     }
 }
