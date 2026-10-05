@@ -5,17 +5,21 @@ import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.Usuario;
 import com.marlondev.stockflow.domain.enums.PerfilUsuario;
 import com.marlondev.stockflow.domain.enums.StatusEnum;
+import com.marlondev.stockflow.domain.enums.StatusUsuario;
 import com.marlondev.stockflow.dto.OrdemDeServicoConclusaoAtendimentoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
 import com.marlondev.stockflow.dto.OrdemServicoAnexoResponseDTO;
 import com.marlondev.stockflow.dto.OrdemServicoItemRequestDTO;
 import com.marlondev.stockflow.dto.OrdemServicoItemResponseDTO;
+import com.marlondev.stockflow.dto.TecnicoAjudanteRequestDTO;
+import com.marlondev.stockflow.dto.TecnicoAjudanteResponseDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoDetalheDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoItemRequestDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoResumoDTO;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
 import com.marlondev.stockflow.repositories.OrdemServicoAnexoRepository;
 import com.marlondev.stockflow.repositories.OrdemServicoItemRepository;
+import com.marlondev.stockflow.repositories.UsuarioRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ForbiddenException;
 import org.springframework.stereotype.Service;
@@ -38,6 +42,7 @@ public class TecnicoOrdemServicoService {
     private final OrdemDeServicoService ordemDeServicoService;
     private final OrdemServicoItemService ordemServicoItemService;
     private final OrdemServicoAnexoService ordemServicoAnexoService;
+    private final UsuarioRepository usuarioRepository;
 
     public TecnicoOrdemServicoService(
             OrdemDeServicoRepository ordemDeServicoRepository,
@@ -45,7 +50,8 @@ public class TecnicoOrdemServicoService {
             OrdemServicoAnexoRepository ordemServicoAnexoRepository,
             OrdemDeServicoService ordemDeServicoService,
             OrdemServicoItemService ordemServicoItemService,
-            OrdemServicoAnexoService ordemServicoAnexoService
+            OrdemServicoAnexoService ordemServicoAnexoService,
+            UsuarioRepository usuarioRepository
     ) {
         this.ordemDeServicoRepository = ordemDeServicoRepository;
         this.ordemServicoItemRepository = ordemServicoItemRepository;
@@ -53,6 +59,7 @@ public class TecnicoOrdemServicoService {
         this.ordemDeServicoService = ordemDeServicoService;
         this.ordemServicoItemService = ordemServicoItemService;
         this.ordemServicoAnexoService = ordemServicoAnexoService;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public List<TecnicoOrdemServicoResumoDTO> listarMinhasOrdens(Usuario usuario) {
@@ -65,6 +72,20 @@ public class TecnicoOrdemServicoService {
                 )
                 .stream()
                 .map(TecnicoOrdemServicoResumoDTO::new)
+                .toList();
+    }
+
+    public List<TecnicoAjudanteResponseDTO> listarPossiveisAjudantes(Usuario usuario) {
+        Colaborador colaborador = obterColaboradorTecnico(usuario);
+
+        return usuarioRepository
+                .findByPerfilAndStatusAndColaboradorIsNotNullOrderByColaboradorNomeAsc(
+                        PerfilUsuario.TECNICO,
+                        StatusUsuario.ATIVO
+                )
+                .stream()
+                .filter(tecnico -> !tecnico.getColaborador().getId().equals(colaborador.getId()))
+                .map(TecnicoAjudanteResponseDTO::new)
                 .toList();
     }
 
@@ -154,6 +175,39 @@ public class TecnicoOrdemServicoService {
         }
 
         return ordemServicoAnexoService.salvar(osId, arquivo);
+    }
+
+    public OrdemDeServicoResponseDTO atualizarAjudante(
+            Usuario usuario,
+            Long osId,
+            TecnicoAjudanteRequestDTO dto
+    ) {
+        Colaborador colaborador = obterColaboradorTecnico(usuario);
+        OrdemDeServico os = buscarOrdemDoTecnico(osId, colaborador);
+
+        if (os.getStatus() != StatusEnum.AGENDADA && os.getStatus() != StatusEnum.EM_ATENDIMENTO) {
+            throw new DatabaseException("Ajudante s\u00f3 pode ser alterado com a ordem agendada ou em atendimento!");
+        }
+
+        if (dto.getAjudanteId() == null) {
+            os.setAjudante(null);
+            return new OrdemDeServicoResponseDTO(ordemDeServicoRepository.save(os));
+        }
+
+        if (dto.getAjudanteId().equals(colaborador.getId())) {
+            throw new DatabaseException("T\u00e9cnico respons\u00e1vel n\u00e3o pode ser selecionado como ajudante!");
+        }
+
+        Usuario ajudanteUsuario = usuarioRepository
+                .findByColaboradorIdAndPerfilAndStatus(
+                        dto.getAjudanteId(),
+                        PerfilUsuario.TECNICO,
+                        StatusUsuario.ATIVO
+                )
+                .orElseThrow(() -> new DatabaseException("Ajudante precisa ser um t\u00e9cnico ativo com colaborador vinculado!"));
+
+        os.setAjudante(ajudanteUsuario.getColaborador());
+        return new OrdemDeServicoResponseDTO(ordemDeServicoRepository.save(os));
     }
 
     private Colaborador obterColaboradorTecnico(Usuario usuario) {

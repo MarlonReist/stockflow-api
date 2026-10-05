@@ -34,6 +34,9 @@ public class OrdemDeServico implements Serializable {
     @ManyToOne
     @JoinColumn(name = "colaborador_id")
     private Colaborador colaborador;
+    @ManyToOne
+    @JoinColumn(name = "ajudante_id")
+    private Colaborador ajudante;
     private LocalDateTime dataFechamento;
 
     private LocalDateTime dataAgendada;
@@ -121,6 +124,14 @@ public class OrdemDeServico implements Serializable {
 
     public void setColaborador(Colaborador colaborador) {
         this.colaborador = colaborador;
+    }
+
+    public Colaborador getAjudante() {
+        return ajudante;
+    }
+
+    public void setAjudante(Colaborador ajudante) {
+        this.ajudante = ajudante;
     }
 
     public LocalDateTime getDataFechamento() {

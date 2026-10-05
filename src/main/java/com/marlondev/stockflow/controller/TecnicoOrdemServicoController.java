@@ -4,6 +4,8 @@ import com.marlondev.stockflow.dto.OrdemDeServicoConclusaoAtendimentoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
 import com.marlondev.stockflow.dto.OrdemServicoAnexoResponseDTO;
 import com.marlondev.stockflow.dto.OrdemServicoItemResponseDTO;
+import com.marlondev.stockflow.dto.TecnicoAjudanteRequestDTO;
+import com.marlondev.stockflow.dto.TecnicoAjudanteResponseDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoDetalheDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoItemRequestDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoResumoDTO;
@@ -45,6 +47,16 @@ public class TecnicoOrdemServicoController {
                 tecnicoOrdemServicoService.listarMinhasOrdens(usuarioDetails.getUsuario());
 
         return ResponseEntity.ok().body(ordens);
+    }
+
+    @GetMapping(value = "/ajudantes")
+    public ResponseEntity<List<TecnicoAjudanteResponseDTO>> listarPossiveisAjudantes(
+            @AuthenticationPrincipal UsuarioDetails usuarioDetails
+    ) {
+        List<TecnicoAjudanteResponseDTO> ajudantes =
+                tecnicoOrdemServicoService.listarPossiveisAjudantes(usuarioDetails.getUsuario());
+
+        return ResponseEntity.ok().body(ajudantes);
     }
 
     @GetMapping(value = "/os/{id}")
@@ -113,5 +125,17 @@ public class TecnicoOrdemServicoController {
                 tecnicoOrdemServicoService.adicionarAnexo(usuarioDetails.getUsuario(), id, arquivo);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(anexo);
+    }
+
+    @PatchMapping(value = "/os/{id}/ajudante")
+    public ResponseEntity<OrdemDeServicoResponseDTO> atualizarAjudante(
+            @AuthenticationPrincipal UsuarioDetails usuarioDetails,
+            @PathVariable Long id,
+            @RequestBody TecnicoAjudanteRequestDTO dto
+    ) {
+        OrdemDeServicoResponseDTO ordem =
+                tecnicoOrdemServicoService.atualizarAjudante(usuarioDetails.getUsuario(), id, dto);
+
+        return ResponseEntity.ok().body(ordem);
     }
 }

@@ -186,7 +186,8 @@ public class PdfService {
         tabela.addCell(celulaCampo("Data fechamento", formatarDataHora(os.getDataFechamento()), 1));
         tabela.addCell(celulaCampo("Status", os.getStatus() == null ? "" : os.getStatus().name(), 1));
         tabela.addCell(celulaCampo("Tipo", nomeTipoOrdemServico(os), 4));
-        tabela.addCell(celulaCampo("Técnico / Colaborador", nomeColaborador(os.getColaborador()), 4));
+        tabela.addCell(celulaCampo("Técnico / Colaborador", nomeColaborador(os.getColaborador()), 2));
+        tabela.addCell(celulaCampo("Ajudante", nomeColaborador(os.getAjudante()), 2));
 
         document.add(tabela);
     }
@@ -271,7 +272,8 @@ public class PdfService {
         dados.addCell(celulaCampo("Emiss\u00e3o", formatarData(LocalDate.now()), 1));
         dados.addCell(celulaCampo("Data abertura", formatarData(os.getDataAbertura()), 1));
         dados.addCell(celulaCampo("Status", os.getStatus() == null ? "" : os.getStatus().name(), 1));
-        dados.addCell(celulaCampo("T\u00e9cnico / Colaborador", nomeColaborador(os.getColaborador()), 2));
+        dados.addCell(celulaCampo("T\u00e9cnico / Colaborador", nomeColaborador(os.getColaborador()), 1));
+        dados.addCell(celulaCampo("Ajudante", nomeColaborador(os.getAjudante()), 1));
 
         document.add(dados);
     }

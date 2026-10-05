@@ -17,6 +17,8 @@ public class TecnicoOrdemServicoDetalheDTO {
     private String clienteNome;
     private String clienteTelefone;
     private String clienteEndereco;
+    private Long ajudanteId;
+    private String ajudanteNome;
     private Long tipoOrdemServicoId;
     private String tipoOrdemServicoNome;
     private LocalDateTime dataAgendada;
@@ -42,6 +44,10 @@ public class TecnicoOrdemServicoDetalheDTO {
         clienteNome = os.getCliente().getNome();
         clienteTelefone = os.getCliente().getTelefone();
         clienteEndereco = os.getCliente().getEndereco();
+        if (os.getAjudante() != null) {
+            ajudanteId = os.getAjudante().getId();
+            ajudanteNome = os.getAjudante().getNome();
+        }
         dataAgendada = os.getDataAgendada();
         inicioAtendimento = os.getInicioAtendimento();
         fimAtendimento = os.getFimAtendimento();
@@ -85,6 +91,14 @@ public class TecnicoOrdemServicoDetalheDTO {
 
     public String getClienteEndereco() {
         return clienteEndereco;
+    }
+
+    public Long getAjudanteId() {
+        return ajudanteId;
+    }
+
+    public String getAjudanteNome() {
+        return ajudanteNome;
     }
 
     public Long getTipoOrdemServicoId() {
