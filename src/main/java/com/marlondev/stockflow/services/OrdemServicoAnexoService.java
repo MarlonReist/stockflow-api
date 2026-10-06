@@ -2,6 +2,7 @@ package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.OrdemServicoAnexo;
+import com.marlondev.stockflow.domain.enums.StatusEnum;
 import com.marlondev.stockflow.dto.OrdemServicoAnexoResponseDTO;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
 import com.marlondev.stockflow.repositories.OrdemServicoAnexoRepository;
@@ -28,6 +29,11 @@ import java.util.stream.Collectors;
 @Service
 public class OrdemServicoAnexoService {
 
+    private static final List<StatusEnum> STATUS_ADMIN_PERMITEM_ANEXO = List.of(
+            StatusEnum.ABERTA,
+            StatusEnum.AGUARDANDO_CONFERENCIA
+    );
+
     private static final List<String> TIPOS_PERMITIDOS = List.of(
             "image/jpeg",
             "image/png",
@@ -48,10 +54,38 @@ public class OrdemServicoAnexoService {
 
     @Transactional
     public OrdemServicoAnexoResponseDTO salvar(Long osId, MultipartFile arquivo) {
+        return salvarComStatusPermitido(
+                osId,
+                arquivo,
+                STATUS_ADMIN_PERMITEM_ANEXO,
+                "Anexos s\u00f3 podem ser alterados com a ordem aberta ou aguardando confer\u00eancia!"
+        );
+    }
+
+    @Transactional
+    public OrdemServicoAnexoResponseDTO salvarDuranteAtendimento(Long osId, MultipartFile arquivo) {
+        return salvarComStatusPermitido(
+                osId,
+                arquivo,
+                List.of(StatusEnum.EM_ATENDIMENTO),
+                "Ordem de servi\u00e7o precisa estar em atendimento para adicionar anexo!"
+        );
+    }
+
+    private OrdemServicoAnexoResponseDTO salvarComStatusPermitido(
+            Long osId,
+            MultipartFile arquivo,
+            List<StatusEnum> statusPermitidos,
+            String mensagemStatusInvalido
+    ) {
         validarArquivo(arquivo);
 
         OrdemDeServico os = ordemDeServicoRepository.findById(osId)
                 .orElseThrow(() -> new ResourceNotFoundException(osId));
+
+        if (!statusPermitidos.contains(os.getStatus())) {
+            throw new DatabaseException(mensagemStatusInvalido);
+        }
 
         String nomeOriginal = limparNomeArquivo(arquivo.getOriginalFilename());
         String nomeArquivo = UUID.randomUUID() + extensao(nomeOriginal);
@@ -116,6 +150,10 @@ public class OrdemServicoAnexoService {
     @Transactional
     public void deletar(Long anexoId) {
         OrdemServicoAnexo anexo = buscarEntidadePorId(anexoId);
+
+        if (!STATUS_ADMIN_PERMITEM_ANEXO.contains(anexo.getOrdemDeServico().getStatus())) {
+            throw new DatabaseException("Anexos s\u00f3 podem ser alterados com a ordem aberta ou aguardando confer\u00eancia!");
+        }
 
         try {
             Files.deleteIfExists(Paths.get(anexo.getCaminhoArquivo()));

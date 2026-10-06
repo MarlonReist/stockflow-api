@@ -174,7 +174,7 @@ public class TecnicoOrdemServicoService {
             throw new DatabaseException("Ordem de serviço precisa estar em atendimento para adicionar anexo!");
         }
 
-        return ordemServicoAnexoService.salvar(osId, arquivo);
+        return ordemServicoAnexoService.salvarDuranteAtendimento(osId, arquivo);
     }
 
     public OrdemDeServicoResponseDTO atualizarAjudante(

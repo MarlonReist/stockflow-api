@@ -46,6 +46,8 @@ public class SecurityConfig {
                         .requestMatchers("/conferencias-estoque/**").hasAuthority("ADMIN")
                         .requestMatchers("/ajustes-estoque/**").hasAuthority("ADMIN")
                         .requestMatchers("/itens", "/itens/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/os/{osId}/anexos").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/os/anexos/{anexoId}").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/almoxarifados/**").authenticated()
                         .requestMatchers("/almoxarifados/**").hasAuthority("ADMIN")
                         .requestMatchers("/tecnico/**").hasAuthority("TECNICO")
