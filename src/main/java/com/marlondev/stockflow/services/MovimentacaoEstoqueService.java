@@ -326,6 +326,22 @@ public class MovimentacaoEstoqueService {
         movimentacaoEstoqueRepository.save(mov);
     }
 
+    public void registrarEntradaPorOrdemDeServico(
+            OrdemDeServico ordemDeServico,
+            Almoxarifado almoxarifado,
+            Produto produto,
+            Integer quantidade
+    ) {
+        MovimentacaoEstoque mov = new MovimentacaoEstoque();
+        mov.setAlmoxarifado(almoxarifado);
+        mov.setProduto(produto);
+        mov.setQuantidade(quantidade);
+        mov.setDataMovimentacao(LocalDate.now());
+        mov.setTipo(TipoMovimentacao.ENTRADA);
+        mov.setOrdemDeServico(ordemDeServico);
+        movimentacaoEstoqueRepository.save(mov);
+    }
+
     public void registrarEntradaTransferencia(TransferenciaItem transferenciaItem) {
         MovimentacaoEstoque mov = new MovimentacaoEstoque();
         mov.setAlmoxarifado(transferenciaItem.getTransferencia().getAlmoxarifadoDestino());

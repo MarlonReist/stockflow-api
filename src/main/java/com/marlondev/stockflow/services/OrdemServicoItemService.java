@@ -17,6 +17,11 @@ import java.util.stream.Collectors;
 @Service
 public class OrdemServicoItemService {
 
+    private static final List<StatusEnum> STATUS_ADMIN_PERMITEM_CORRECAO = List.of(
+            StatusEnum.ABERTA,
+            StatusEnum.AGUARDANDO_CONFERENCIA
+    );
+
     private final OrdemServicoItemRepository ordemItemRepository;
     private final OrdemDeServicoRepository ordemDeServicoRepository;
     private final ProdutoRepository produtoRepository;
@@ -37,8 +42,8 @@ public class OrdemServicoItemService {
     public OrdemServicoItemResponseDTO salvar(OrdemServicoItemRequestDTO dto) {
         return salvarComStatusPermitido(
                 dto,
-                StatusEnum.ABERTA,
-                "Ordem de serviço não está aberta!"
+                STATUS_ADMIN_PERMITEM_CORRECAO,
+                "Ordem de servi\u00e7o precisa estar aberta ou aguardando confer\u00eancia!"
         );
     }
 
@@ -46,14 +51,14 @@ public class OrdemServicoItemService {
     public OrdemServicoItemResponseDTO salvarDuranteAtendimento(OrdemServicoItemRequestDTO dto) {
         return salvarComStatusPermitido(
                 dto,
-                StatusEnum.EM_ATENDIMENTO,
+                List.of(StatusEnum.EM_ATENDIMENTO),
                 "Ordem de serviço precisa estar em atendimento para adicionar produto!"
         );
     }
 
     private OrdemServicoItemResponseDTO salvarComStatusPermitido(
             OrdemServicoItemRequestDTO dto,
-            StatusEnum statusPermitido,
+            List<StatusEnum> statusPermitidos,
             String mensagemStatusInvalido
     ) {
         OrdemDeServico osExistente = ordemDeServicoRepository.findById(dto.getOsId())
@@ -71,7 +76,7 @@ public class OrdemServicoItemService {
                 )
                 .orElseThrow(() -> new DatabaseException("Não existe estoque desse produto nesse almoxarifado"));
 
-        if (osExistente.getStatus() != statusPermitido) {
+        if (!statusPermitidos.contains(osExistente.getStatus())) {
             throw new DatabaseException(mensagemStatusInvalido);
         }
 
@@ -106,8 +111,9 @@ public class OrdemServicoItemService {
     public void deletarOrdemServicoItemPorId(Long id) {
         deletarComStatusPermitido(
                 id,
-                StatusEnum.ABERTA,
-                "Ordem de Serviço não está aberta!"
+                STATUS_ADMIN_PERMITEM_CORRECAO,
+                "Ordem de servi\u00e7o precisa estar aberta ou aguardando confer\u00eancia!",
+                true
         );
     }
 
@@ -115,20 +121,22 @@ public class OrdemServicoItemService {
     public void deletarDuranteAtendimento(Long itemId) {
         deletarComStatusPermitido(
                 itemId,
-                StatusEnum.EM_ATENDIMENTO,
-                "Ordem de serviço precisa estar em atendimento para remover produto!"
+                List.of(StatusEnum.EM_ATENDIMENTO),
+                "Ordem de servi\u00e7o precisa estar em atendimento para remover produto!",
+                false
         );
     }
 
     private void deletarComStatusPermitido(
             Long itemId,
-            StatusEnum statusPermitido,
-            String mensagemStatusInvalido
+            List<StatusEnum> statusPermitidos,
+            String mensagemStatusInvalido,
+            boolean registrarMovimentacaoDevolucao
     ) {
         OrdemServicoItem osItem = ordemItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException(itemId));
 
-        if (osItem.getOrdemDeServico().getStatus() != statusPermitido) {
+        if (!statusPermitidos.contains(osItem.getOrdemDeServico().getStatus())) {
             throw new DatabaseException(mensagemStatusInvalido);
         }
 
@@ -142,6 +150,14 @@ public class OrdemServicoItemService {
         estoqueAntigo.setQuantidade(estoqueAntigo.getQuantidade() + devolucao);
 
         estoqueRepository.save(estoqueAntigo);
+        if (registrarMovimentacaoDevolucao) {
+            movimentacaoEstoqueService.registrarEntradaPorOrdemDeServico(
+                    osItem.getOrdemDeServico(),
+                    osItem.getAlmoxarifado(),
+                    osItem.getProduto(),
+                    devolucao
+            );
+        }
         ordemItemRepository.delete(osItem);
     }
 
@@ -155,11 +171,14 @@ public class OrdemServicoItemService {
         OrdemServicoItem itemAntigo = ordemItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
 
-        if (itemAntigo.getOrdemDeServico().getStatus() != StatusEnum.ABERTA) {
-            throw new DatabaseException("Ordem de serviço não está aberta!");
+        if (!STATUS_ADMIN_PERMITEM_CORRECAO.contains(itemAntigo.getOrdemDeServico().getStatus())) {
+            throw new DatabaseException("Ordem de servi\u00e7o precisa estar aberta ou aguardando confer\u00eancia!");
         }
 
         Integer devolucao = itemAntigo.getQuantidade();
+        OrdemDeServico ordemDeServico = itemAntigo.getOrdemDeServico();
+        Almoxarifado almoxarifadoAntigo = itemAntigo.getAlmoxarifado();
+        Produto produtoAntigo = itemAntigo.getProduto();
         AlmoxarifadoEstoque estoqueAntigo = estoqueRepository.findByAlmoxarifadoIdAndProdutoId(itemAntigo.getAlmoxarifado().getId(),itemAntigo.getProduto().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Não existe estoque desse produto nesse almoxarifado"));
         estoqueAntigo.setQuantidade(estoqueAntigo.getQuantidade() + devolucao);
@@ -188,6 +207,13 @@ public class OrdemServicoItemService {
         estoqueRepository.save(estoqueAntigo);
         estoqueRepository.save(estoqueNovo);
         OrdemServicoItem itemAtualizado = ordemItemRepository.save(itemAntigo);
+        movimentacaoEstoqueService.registrarEntradaPorOrdemDeServico(
+                ordemDeServico,
+                almoxarifadoAntigo,
+                produtoAntigo,
+                devolucao
+        );
+        movimentacaoEstoqueService.registrarSaidaPorOrdemDeServico(itemAtualizado);
         return new OrdemServicoItemResponseDTO(itemAtualizado);
     }
 }
