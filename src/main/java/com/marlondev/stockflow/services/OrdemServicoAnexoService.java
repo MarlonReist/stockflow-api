@@ -3,6 +3,7 @@ package com.marlondev.stockflow.services;
 import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.OrdemServicoAnexo;
 import com.marlondev.stockflow.domain.enums.StatusEnum;
+import com.marlondev.stockflow.dto.OrdemServicoAnexoNomeRequestDTO;
 import com.marlondev.stockflow.dto.OrdemServicoAnexoResponseDTO;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
 import com.marlondev.stockflow.repositories.OrdemServicoAnexoRepository;
@@ -39,6 +40,8 @@ public class OrdemServicoAnexoService {
             "image/png",
             "application/pdf"
     );
+
+    private static final int TAMANHO_MAXIMO_NOME_EXIBIDO = 120;
 
     private final OrdemServicoAnexoRepository anexoRepository;
     private final OrdemDeServicoRepository ordemDeServicoRepository;
@@ -151,9 +154,7 @@ public class OrdemServicoAnexoService {
     public void deletar(Long anexoId) {
         OrdemServicoAnexo anexo = buscarEntidadePorId(anexoId);
 
-        if (!STATUS_ADMIN_PERMITEM_ANEXO.contains(anexo.getOrdemDeServico().getStatus())) {
-            throw new DatabaseException("Anexos s\u00f3 podem ser alterados com a ordem aberta ou aguardando confer\u00eancia!");
-        }
+        validarStatusAdministrativo(anexo);
 
         try {
             Files.deleteIfExists(Paths.get(anexo.getCaminhoArquivo()));
@@ -162,6 +163,22 @@ public class OrdemServicoAnexoService {
         }
 
         anexoRepository.delete(anexo);
+    }
+
+    @Transactional
+    public OrdemServicoAnexoResponseDTO renomear(Long anexoId, OrdemServicoAnexoNomeRequestDTO dto) {
+        OrdemServicoAnexo anexo = buscarEntidadePorId(anexoId);
+        validarStatusAdministrativo(anexo);
+
+        anexo.setNomeOriginal(normalizarNomeExibido(dto.getNome(), anexo));
+        OrdemServicoAnexo anexoSalvo = anexoRepository.save(anexo);
+        return new OrdemServicoAnexoResponseDTO(anexoSalvo);
+    }
+
+    private void validarStatusAdministrativo(OrdemServicoAnexo anexo) {
+        if (!STATUS_ADMIN_PERMITEM_ANEXO.contains(anexo.getOrdemDeServico().getStatus())) {
+            throw new DatabaseException("Anexos s\u00f3 podem ser alterados com a ordem aberta ou aguardando confer\u00eancia!");
+        }
     }
 
     private void validarArquivo(MultipartFile arquivo) {
@@ -179,6 +196,56 @@ public class OrdemServicoAnexoService {
             return "arquivo";
         }
         return Paths.get(nomeOriginal).getFileName().toString();
+    }
+
+    private String normalizarNomeExibido(String nome, OrdemServicoAnexo anexo) {
+        if (nome == null || nome.isBlank()) {
+            throw new DatabaseException("Nome do anexo \u00e9 obrigat\u00f3rio");
+        }
+
+        String nomeNormalizado = nome.trim();
+        if (nomeNormalizado.length() > TAMANHO_MAXIMO_NOME_EXIBIDO) {
+            throw new DatabaseException("Nome do anexo deve ter no m\u00e1ximo 120 caracteres");
+        }
+
+        if (nomeNormalizado.contains("/") || nomeNormalizado.contains("\\") || nomeNormalizado.contains("..")) {
+            throw new DatabaseException("Nome do anexo n\u00e3o pode conter caminho");
+        }
+
+        if (!Paths.get(nomeNormalizado).getFileName().toString().equals(nomeNormalizado)) {
+            throw new DatabaseException("Nome do anexo n\u00e3o pode conter caminho");
+        }
+
+        return ajustarExtensao(nomeNormalizado, anexo);
+    }
+
+    private String ajustarExtensao(String nome, OrdemServicoAnexo anexo) {
+        List<String> extensoesPermitidas = extensoesPermitidas(anexo.getContentType());
+        String extensaoAtual = extensao(anexo.getNomeOriginal()).toLowerCase();
+        String extensaoNova = extensao(nome).toLowerCase();
+
+        if (extensaoNova.isBlank()) {
+            return nome + extensaoAtual;
+        }
+
+        if (!extensoesPermitidas.contains(extensaoNova)) {
+            throw new DatabaseException("Extens\u00e3o do anexo incompat\u00edvel com o tipo do arquivo");
+        }
+
+        return nome;
+    }
+
+    private List<String> extensoesPermitidas(String contentType) {
+        if ("image/jpeg".equals(contentType)) {
+            return List.of(".jpg", ".jpeg");
+        }
+        if ("image/png".equals(contentType)) {
+            return List.of(".png");
+        }
+        if ("application/pdf".equals(contentType)) {
+            return List.of(".pdf");
+        }
+        throw new DatabaseException("Tipo de arquivo nao permitido");
     }
 
     private String extensao(String nomeArquivo) {
