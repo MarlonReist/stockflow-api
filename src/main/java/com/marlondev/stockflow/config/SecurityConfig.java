@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/tipos-os/**").hasAuthority("ADMIN")
                         .requestMatchers("/conferencias-estoque/**").hasAuthority("ADMIN")
                         .requestMatchers("/ajustes-estoque/**").hasAuthority("ADMIN")
+                        .requestMatchers("/relatorios-tecnicos/**").hasAuthority("ADMIN")
                         .requestMatchers("/itens", "/itens/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/os/{osId}/anexos").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/os/anexos/{anexoId}/nome").hasAuthority("ADMIN")
