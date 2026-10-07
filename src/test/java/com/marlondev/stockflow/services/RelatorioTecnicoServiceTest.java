@@ -1,8 +1,12 @@
 package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.enums.StatusEnum;
+import com.marlondev.stockflow.domain.enums.AgrupamentoRelatorioEnum;
+import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorStatusDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTecnicoDTO;
+import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTipoDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoResumoDTO;
+import com.marlondev.stockflow.dto.RelatorioTecnicoSerieTemporalDTO;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import org.junit.jupiter.api.BeforeEach;
@@ -169,5 +173,157 @@ class RelatorioTecnicoServiceTest {
 
         assertEquals(esperado, resultado);
         verify(ordemDeServicoRepository).contarParticipacoesPorTecnicoAjudante(inicio, fimExclusivo, null, null);
+    }
+
+    @Test
+    void buscarOsRealizadasAoLongoDoTempoDeveAgruparPorDia() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 6);
+        LocalDateTime inicio = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2026, 10, 7, 0, 0);
+        Long tecnicoId = 10L;
+        Long tipoOrdemServicoId = 20L;
+
+        List<Object[]> dadosRepository = List.of(
+                new Object[]{"2026-10-01", 3L},
+                new Object[]{"2026-10-02", 5L}
+        );
+
+        when(ordemDeServicoRepository.contarRealizadasPorDia(inicio, fimExclusivo, tecnicoId, tipoOrdemServicoId))
+                .thenReturn(dadosRepository);
+
+        List<RelatorioTecnicoSerieTemporalDTO> resultado =
+                service.buscarOsRealizadasAoLongoDoTempo(
+                        dataInicial,
+                        dataFinal,
+                        AgrupamentoRelatorioEnum.DIA,
+                        tecnicoId,
+                        tipoOrdemServicoId
+                );
+
+        assertEquals(2, resultado.size());
+        assertEquals("2026-10-01", resultado.get(0).getPeriodo());
+        assertEquals(3L, resultado.get(0).getQuantidade());
+        assertEquals("2026-10-02", resultado.get(1).getPeriodo());
+        assertEquals(5L, resultado.get(1).getQuantidade());
+
+        verify(ordemDeServicoRepository).contarRealizadasPorDia(inicio, fimExclusivo, tecnicoId, tipoOrdemServicoId);
+    }
+
+    @Test
+    void buscarOsRealizadasAoLongoDoTempoDeveAgruparPorSemana() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 31);
+        LocalDateTime inicio = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2026, 11, 1, 0, 0);
+
+        List<Object[]> dadosRepository = List.of(
+                new Object[]{"2026-W40", 9L},
+                new Object[]{"2026-W41", 12L}
+        );
+
+        when(ordemDeServicoRepository.contarRealizadasPorSemana(inicio, fimExclusivo, null, null))
+                .thenReturn(dadosRepository);
+
+        List<RelatorioTecnicoSerieTemporalDTO> resultado =
+                service.buscarOsRealizadasAoLongoDoTempo(
+                        dataInicial,
+                        dataFinal,
+                        AgrupamentoRelatorioEnum.SEMANA,
+                        null,
+                        null
+                );
+
+        assertEquals(2, resultado.size());
+        assertEquals("2026-W40", resultado.get(0).getPeriodo());
+        assertEquals(9L, resultado.get(0).getQuantidade());
+        assertEquals("2026-W41", resultado.get(1).getPeriodo());
+        assertEquals(12L, resultado.get(1).getQuantidade());
+
+        verify(ordemDeServicoRepository).contarRealizadasPorSemana(inicio, fimExclusivo, null, null);
+    }
+
+    @Test
+    void buscarOsRealizadasAoLongoDoTempoDeveAgruparPorMes() {
+        LocalDate dataInicial = LocalDate.of(2026, 1, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 12, 31);
+        LocalDateTime inicio = LocalDateTime.of(2026, 1, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2027, 1, 1, 0, 0);
+
+        List<Object[]> dadosRepository = List.of(
+                new Object[]{"2026-01", 18L},
+                new Object[]{"2026-02", 22L}
+        );
+
+        when(ordemDeServicoRepository.contarRealizadasPorMes(inicio, fimExclusivo, null, 5L))
+                .thenReturn(dadosRepository);
+
+        List<RelatorioTecnicoSerieTemporalDTO> resultado =
+                service.buscarOsRealizadasAoLongoDoTempo(
+                        dataInicial,
+                        dataFinal,
+                        AgrupamentoRelatorioEnum.MES,
+                        null,
+                        5L
+                );
+
+        assertEquals(2, resultado.size());
+        assertEquals("2026-01", resultado.get(0).getPeriodo());
+        assertEquals(18L, resultado.get(0).getQuantidade());
+        assertEquals("2026-02", resultado.get(1).getPeriodo());
+        assertEquals(22L, resultado.get(1).getQuantidade());
+
+        verify(ordemDeServicoRepository).contarRealizadasPorMes(inicio, fimExclusivo, null, 5L);
+    }
+
+    @Test
+    void buscarOsRealizadasAoLongoDoTempoDeveBloquearAgrupamentoNulo() {
+        assertThrows(DatabaseException.class, () -> service.buscarOsRealizadasAoLongoDoTempo(
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 6),
+                null,
+                null,
+                null
+        ));
+    }
+
+    @Test
+    void buscarOsRealizadasPorTipoDeveRetornarDistribuicaoPorTipo() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 6);
+        LocalDateTime inicio = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2026, 10, 7, 0, 0);
+        Long tecnicoId = 10L;
+
+        List<RelatorioTecnicoQuantidadePorTipoDTO> esperado = List.of(
+                new RelatorioTecnicoQuantidadePorTipoDTO(1L, "Instalação", 40L),
+                new RelatorioTecnicoQuantidadePorTipoDTO(2L, "Manutenção", 28L)
+        );
+
+        when(ordemDeServicoRepository.contarRealizadasPorTipo(inicio, fimExclusivo, tecnicoId))
+                .thenReturn(esperado);
+
+        List<RelatorioTecnicoQuantidadePorTipoDTO> resultado =
+                service.buscarOsRealizadasPorTipo(dataInicial, dataFinal, tecnicoId);
+
+        assertEquals(esperado, resultado);
+        verify(ordemDeServicoRepository).contarRealizadasPorTipo(inicio, fimExclusivo, tecnicoId);
+    }
+
+    @Test
+    void buscarDistribuicaoAtualPorStatusDeveRetornarStatusAtuais() {
+        List<RelatorioTecnicoQuantidadePorStatusDTO> esperado = List.of(
+                new RelatorioTecnicoQuantidadePorStatusDTO(StatusEnum.ABERTA, 5L),
+                new RelatorioTecnicoQuantidadePorStatusDTO(StatusEnum.AGENDADA, 12L),
+                new RelatorioTecnicoQuantidadePorStatusDTO(StatusEnum.EM_ATENDIMENTO, 3L)
+        );
+
+        when(ordemDeServicoRepository.contarPorStatusAtual()).thenReturn(esperado);
+
+        List<RelatorioTecnicoQuantidadePorStatusDTO> resultado =
+                service.buscarDistribuicaoAtualPorStatus();
+
+        assertEquals(esperado, resultado);
+        verify(ordemDeServicoRepository).contarPorStatusAtual();
     }
 }

@@ -1,14 +1,15 @@
 package com.marlondev.stockflow.controller;
 
-import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTecnicoDTO;
-import com.marlondev.stockflow.dto.RelatorioTecnicoResumoDTO;
+import com.marlondev.stockflow.dto.*;
 import com.marlondev.stockflow.services.RelatorioTecnicoService;
+import com.marlondev.stockflow.domain.enums.AgrupamentoRelatorioEnum;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 
 import java.time.LocalDate;
 import java.util.List;
@@ -72,6 +73,49 @@ public class RelatorioTecnicoController {
                         tecnicoId,
                         tipoOrdemServicoId
                 );
+
+        return ResponseEntity.ok().body(dados);
+    }
+
+    @GetMapping(value = "/os-realizadas-tempo")
+    public ResponseEntity<List<RelatorioTecnicoSerieTemporalDTO>> buscarOsRealizadasAoLongoDoTempo(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicial,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFinal,
+            @RequestParam AgrupamentoRelatorioEnum agrupamento,
+            @RequestParam(required = false) Long tecnicoId,
+            @RequestParam(required = false) Long tipoOrdemServicoId
+    ) {
+        List<RelatorioTecnicoSerieTemporalDTO> dados =
+                relatorioTecnicoService.buscarOsRealizadasAoLongoDoTempo(
+                        dataInicial,
+                        dataFinal,
+                        agrupamento,
+                        tecnicoId,
+                        tipoOrdemServicoId
+                );
+
+        return ResponseEntity.ok().body(dados);
+    }
+
+    @GetMapping(value = "/os-por-tipo")
+    public ResponseEntity<List<RelatorioTecnicoQuantidadePorTipoDTO>> buscarOsRealizadasPorTipo(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicial,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFinal,
+            @RequestParam(required = false) Long tecnicoId
+    ) {
+        List<RelatorioTecnicoQuantidadePorTipoDTO> dados =
+                relatorioTecnicoService.buscarOsRealizadasPorTipo(
+                        dataInicial,
+                        dataFinal,
+                        tecnicoId
+                );
+        return ResponseEntity.ok().body(dados);
+    }
+
+    @GetMapping(value = "/status-atual")
+    public ResponseEntity<List<RelatorioTecnicoQuantidadePorStatusDTO>> buscarDistribuicaoAtualPorStatus() {
+        List<RelatorioTecnicoQuantidadePorStatusDTO> dados =
+                relatorioTecnicoService.buscarDistribuicaoAtualPorStatus();
 
         return ResponseEntity.ok().body(dados);
     }

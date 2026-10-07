@@ -2,7 +2,9 @@ package com.marlondev.stockflow.repositories;
 
 import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.enums.StatusEnum;
+import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorStatusDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTecnicoDTO;
+import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTipoDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -156,4 +158,89 @@ public interface OrdemDeServicoRepository extends JpaRepository<OrdemDeServico, 
             @Param("tecnicoId") Long tecnicoId,
             @Param("tipoOrdemServicoId") Long tipoOrdemServicoId
     );
+
+    @Query(value = """
+        SELECT DATE_FORMAT(fim_atendimento, '%Y-%m-%d') AS periodo,
+               COUNT(*) AS quantidade
+        FROM ordem_de_servico
+        WHERE fim_atendimento >= :inicio
+          AND fim_atendimento < :fimExclusivo
+          AND (:tecnicoId IS NULL OR colaborador_id = :tecnicoId)
+          AND (:tipoOrdemServicoId IS NULL OR tipo_ordem_servico_id = :tipoOrdemServicoId)
+        GROUP BY DATE_FORMAT(fim_atendimento, '%Y-%m-%d')
+        ORDER BY periodo ASC
+        """, nativeQuery = true)
+    List<Object[]> contarRealizadasPorDia(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fimExclusivo") LocalDateTime fimExclusivo,
+            @Param("tecnicoId") Long tecnicoId,
+            @Param("tipoOrdemServicoId") Long tipoOrdemServicoId
+    );
+
+    @Query(value = """
+        SELECT DATE_FORMAT(fim_atendimento, '%x-W%v') AS periodo,
+               COUNT(*) AS quantidade
+        FROM ordem_de_servico
+        WHERE fim_atendimento >= :inicio
+          AND fim_atendimento < :fimExclusivo
+          AND (:tecnicoId IS NULL OR colaborador_id = :tecnicoId)
+          AND (:tipoOrdemServicoId IS NULL OR tipo_ordem_servico_id = :tipoOrdemServicoId)
+        GROUP BY DATE_FORMAT(fim_atendimento, '%x-W%v')
+        ORDER BY periodo ASC
+        """, nativeQuery = true)
+    List<Object[]> contarRealizadasPorSemana(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fimExclusivo") LocalDateTime fimExclusivo,
+            @Param("tecnicoId") Long tecnicoId,
+            @Param("tipoOrdemServicoId") Long tipoOrdemServicoId
+    );
+
+    @Query(value = """
+        SELECT DATE_FORMAT(fim_atendimento, '%Y-%m') AS periodo,
+               COUNT(*) AS quantidade
+        FROM ordem_de_servico
+        WHERE fim_atendimento >= :inicio
+          AND fim_atendimento < :fimExclusivo
+          AND (:tecnicoId IS NULL OR colaborador_id = :tecnicoId)
+          AND (:tipoOrdemServicoId IS NULL OR tipo_ordem_servico_id = :tipoOrdemServicoId)
+        GROUP BY DATE_FORMAT(fim_atendimento, '%Y-%m')
+        ORDER BY periodo ASC
+        """, nativeQuery = true)
+    List<Object[]> contarRealizadasPorMes(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fimExclusivo") LocalDateTime fimExclusivo,
+            @Param("tecnicoId") Long tecnicoId,
+            @Param("tipoOrdemServicoId") Long tipoOrdemServicoId
+    );
+
+    @Query("""
+        SELECT new com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTipoDTO(
+            os.tipoOrdemServico.id,
+            os.tipoOrdemServico.nome,
+            COUNT(os)
+        )
+        FROM OrdemDeServico os
+        WHERE os.fimAtendimento >= :inicio
+          AND os.fimAtendimento < :fimExclusivo
+          AND os.tipoOrdemServico IS NOT NULL
+          AND (:tecnicoId IS NULL OR os.colaborador.id = :tecnicoId)
+        GROUP BY os.tipoOrdemServico.id, os.tipoOrdemServico.nome
+        ORDER BY COUNT(os) DESC, os.tipoOrdemServico.nome ASC
+        """)
+    List<RelatorioTecnicoQuantidadePorTipoDTO> contarRealizadasPorTipo(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fimExclusivo") LocalDateTime fimExclusivo,
+            @Param("tecnicoId") Long tecnicoId
+    );
+
+    @Query("""
+        SELECT new com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorStatusDTO(
+            os.status,
+            COUNT(os)
+        )
+        FROM OrdemDeServico os
+        GROUP BY os.status
+        ORDER BY os.status ASC
+        """)
+    List<RelatorioTecnicoQuantidadePorStatusDTO> contarPorStatusAtual();
 }

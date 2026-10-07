@@ -1,12 +1,14 @@
 package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.enums.StatusEnum;
-import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTecnicoDTO;
-import com.marlondev.stockflow.dto.RelatorioTecnicoResumoDTO;
+import com.marlondev.stockflow.dto.*;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import org.springframework.stereotype.Service;
+import com.marlondev.stockflow.domain.enums.AgrupamentoRelatorioEnum;
 
+
+import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -128,6 +130,74 @@ public class RelatorioTecnicoService {
                 dataInicial.atStartOfDay(),
                 dataFinal.plusDays(1).atStartOfDay()
         );
+    }
+
+    public List<RelatorioTecnicoSerieTemporalDTO> buscarOsRealizadasAoLongoDoTempo(
+            LocalDate dataInicial,
+            LocalDate dataFinal,
+            AgrupamentoRelatorioEnum agrupamento,
+            Long tecnicoId,
+            Long tipoOrdemServicoId
+    ) {
+        PeriodoRelatorio periodo = resolverPeriodo(dataInicial, dataFinal);
+
+        if (agrupamento == null) {
+            throw new DatabaseException("Agrupamento do relatório deve ser informado!");
+        }
+
+        List<Object[]> dados = switch (agrupamento) {
+            case DIA -> ordemDeServicoRepository.contarRealizadasPorDia(
+                    periodo.inicio(),
+                    periodo.fimExclusivo(),
+                    tecnicoId,
+                    tipoOrdemServicoId
+            );
+            case SEMANA -> ordemDeServicoRepository.contarRealizadasPorSemana(
+                    periodo.inicio(),
+                    periodo.fimExclusivo(),
+                    tecnicoId,
+                    tipoOrdemServicoId
+            );
+            case MES -> ordemDeServicoRepository.contarRealizadasPorMes(
+                    periodo.inicio(),
+                    periodo.fimExclusivo(),
+                    tecnicoId,
+                    tipoOrdemServicoId
+            );
+        };
+
+        return converterSerieTemporal(dados);
+    }
+
+    private List<RelatorioTecnicoSerieTemporalDTO> converterSerieTemporal(List<Object[]> dados) {
+        List<RelatorioTecnicoSerieTemporalDTO> resultado = new ArrayList<>();
+
+        for (Object[] linha : dados) {
+            String periodo = String.valueOf(linha[0]);
+            Long quantidade = ((Number) linha[1]).longValue();
+
+            resultado.add(new RelatorioTecnicoSerieTemporalDTO(periodo, quantidade));
+        }
+
+        return resultado;
+    }
+
+    public List<RelatorioTecnicoQuantidadePorTipoDTO> buscarOsRealizadasPorTipo(
+            LocalDate dataInicial,
+            LocalDate dataFinal,
+            Long tecnicoId
+    ) {
+        PeriodoRelatorio periodo = resolverPeriodo(dataInicial, dataFinal);
+
+        return ordemDeServicoRepository.contarRealizadasPorTipo(
+                periodo.inicio(),
+                periodo.fimExclusivo(),
+                tecnicoId
+        );
+    }
+
+    public List<RelatorioTecnicoQuantidadePorStatusDTO> buscarDistribuicaoAtualPorStatus() {
+        return ordemDeServicoRepository.contarPorStatusAtual();
     }
 
     private record PeriodoRelatorio(LocalDateTime inicio, LocalDateTime fimExclusivo) {
