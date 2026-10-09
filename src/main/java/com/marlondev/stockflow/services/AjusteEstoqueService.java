@@ -16,6 +16,7 @@ import com.marlondev.stockflow.repositories.*;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,6 +25,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class AjusteEstoqueService {
+
+    private static final String MENSAGEM_AJUSTE_DUPLICADO =
+            "Já existe ajuste gerado para este item da conferência.";
 
     private final AjusteEstoqueRepository ajusteEstoqueRepository;
     private final AlmoxarifadoRepository almoxarifadoRepository;
@@ -85,10 +89,21 @@ public class AjusteEstoqueService {
         ajuste.setConferenciaEstoque(conferenciaEstoque);
         ajuste.setConferenciaEstoqueItem(conferenciaEstoqueItem);
 
-        AjusteEstoque ajusteSalvo = ajusteEstoqueRepository.save(ajuste);
+        AjusteEstoque ajusteSalvo = salvarAjuste(ajuste);
         movimentacaoEstoqueService.registrarAjuste(ajusteSalvo);
 
         return ajusteSalvo;
+    }
+
+    private AjusteEstoque salvarAjuste(AjusteEstoque ajuste) {
+        try {
+            return ajusteEstoqueRepository.saveAndFlush(ajuste);
+        } catch (DataIntegrityViolationException e) {
+            if (ajuste.getConferenciaEstoqueItem() != null) {
+                throw new DatabaseException(MENSAGEM_AJUSTE_DUPLICADO);
+            }
+            throw e;
+        }
     }
 
     private AlmoxarifadoEstoque aplicarAjusteEntrada(Almoxarifado almoxarifado, Produto produto,
@@ -120,7 +135,7 @@ public class AjusteEstoqueService {
     @Transactional
     public AjusteEstoqueResponseDTO ajustarPorConferencia(Long itemId, AjusteConferenciaRequestDTO dto,
                                                           Usuario usuarioResponsavel) {
-        ConferenciaEstoqueItem item = conferenciaEstoqueItemRepository.findById(itemId)
+        ConferenciaEstoqueItem item = conferenciaEstoqueItemRepository.findWithLockById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException(itemId));
 
         if (item.getConferencia().getStatus() != StatusEnum.FINALIZADA) {
@@ -134,7 +149,25 @@ public class AjusteEstoqueService {
         }
 
         if (ajusteEstoqueRepository.existsByConferenciaEstoqueItemId(item.getId())) {
-            throw new DatabaseException("Já existe ajuste gerado para este item da conferência!");
+            throw new DatabaseException(MENSAGEM_AJUSTE_DUPLICADO);
+        }
+
+        AlmoxarifadoEstoque estoqueAtual = almoxarifadoEstoqueRepository
+                .findByAlmoxarifadoIdAndProdutoId(
+                        item.getConferencia().getAlmoxarifado().getId(),
+                        item.getProduto().getId()
+                )
+                .orElseThrow(() -> new DatabaseException(
+                        "O estoque deste produto não existe mais no almoxarifado. Inicie uma nova conferência."
+                ));
+
+        if (!estoqueAtual.getQuantidade().equals(item.getQuantidadeEsperada())) {
+            throw new DatabaseException(
+                    "O saldo deste produto mudou após o início da conferência. "
+                            + "Saldo esperado na abertura: " + item.getQuantidadeEsperada()
+                            + "; saldo atual: " + estoqueAtual.getQuantidade()
+                            + ". Inicie uma nova conferência para ajustar o estoque atual."
+            );
         }
 
         TipoAjusteEstoque tipo = divergencia > 0

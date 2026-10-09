@@ -26,6 +26,9 @@ import java.util.stream.Collectors;
 @Service
 public class ConferenciaEstoqueService {
 
+    private static final String MENSAGEM_CONFERENCIA_FINALIZADA =
+            "A conferência está finalizada e não pode mais ser alterada.";
+
     private final ConferenciaEstoqueRepository conferenciaRepository;
     private final ConferenciaEstoqueItemRepository conferenciaItemRepository;
     private final AlmoxarifadoRepository almoxarifadoRepository;
@@ -82,6 +85,10 @@ public class ConferenciaEstoqueService {
         ConferenciaEstoqueItem item = conferenciaItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException(itemId));
 
+        if (item.getConferencia().getStatus() == StatusEnum.FINALIZADA) {
+            throw new DatabaseException(MENSAGEM_CONFERENCIA_FINALIZADA);
+        }
+
         if (item.getConferencia().getStatus() != StatusEnum.ABERTA) {
             throw new DatabaseException("Conferência não está aberta!");
         }
@@ -96,6 +103,10 @@ public class ConferenciaEstoqueService {
     public ConferenciaEstoqueResponseDTO finalizar(Long id) {
         ConferenciaEstoque conferencia = conferenciaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
+
+        if (conferencia.getStatus() == StatusEnum.FINALIZADA) {
+            throw new DatabaseException(MENSAGEM_CONFERENCIA_FINALIZADA);
+        }
 
         if (conferencia.getStatus() != StatusEnum.ABERTA) {
             throw new DatabaseException("Conferência não está aberta!");

@@ -8,7 +8,10 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-@Table(name = "ajuste_estoque")
+@Table(name = "ajuste_estoque",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_ajuste_estoque_conferencia_item", columnNames = "conferencia_estoque_item_id")
+        })
 @Entity
 public class AjusteEstoque implements Serializable {
     @Serial
@@ -144,6 +147,16 @@ public class AjusteEstoque implements Serializable {
 
     public void setConferenciaEstoqueItem(ConferenciaEstoqueItem conferenciaEstoqueItem) {
         this.conferenciaEstoqueItem = conferenciaEstoqueItem;
+    }
+
+    @PreUpdate
+    private void bloquearAlteracao() {
+        throw new IllegalStateException("Ajuste de estoque já criado não pode ser alterado.");
+    }
+
+    @PreRemove
+    private void bloquearExclusao() {
+        throw new IllegalStateException("Ajuste de estoque já criado não pode ser excluído.");
     }
 
     @Override
