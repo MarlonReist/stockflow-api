@@ -99,7 +99,7 @@ public class PdfService {
                 .findByAlmoxarifadoIdOrderByProdutoNomeAsc(almoxarifadoId);
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            Document document = new Document(PageSize.A4, 28, 28, 24, 24);
+            Document document = new Document(PageSize.A4.rotate(), 28, 28, 24, 24);
             PdfWriter.getInstance(document, outputStream);
             document.open();
 
@@ -397,38 +397,49 @@ public class PdfService {
 
     private void adicionarTabelaProdutosAlmoxarifado(Document document, List<AlmoxarifadoEstoque> estoques)
             throws DocumentException {
-        PdfPTable tabela = new PdfPTable(6);
+        PdfPTable tabela = new PdfPTable(7);
         tabela.setWidthPercentage(100);
-        tabela.setWidths(new float[]{0.7f, 2.5f, 1.5f, 1f, 0.9f, 1.1f});
+        tabela.setWidths(new float[]{0.6f, 2.3f, 1.4f, 0.9f, 0.8f, 1.1f, 1.2f});
+        tabela.setHeaderRows(2);
         tabela.setSpacingAfter(8);
 
-        adicionarTituloSecao(tabela, "PRODUTOS EM ESTOQUE", 6);
+        adicionarTituloSecao(tabela, "VALORIZAÇÃO DO ESTOQUE", 7);
         adicionarCabecalhoTabela(tabela, "ID");
         adicionarCabecalhoTabela(tabela, "Produto");
         adicionarCabecalhoTabela(tabela, "Categoria");
         adicionarCabecalhoTabela(tabela, "Unidade");
         adicionarCabecalhoTabela(tabela, "Qtd.");
-        adicionarCabecalhoTabela(tabela, "Pre\u00e7o");
+        adicionarCabecalhoTabela(tabela, "Valor unitário");
+        adicionarCabecalhoTabela(tabela, "Valor total");
 
         if (estoques.isEmpty()) {
             PdfPCell vazio = new PdfPCell(new Phrase("Nenhum produto cadastrado neste almoxarifado.", fonteNormal(8, Color.BLACK)));
-            vazio.setColspan(6);
+            vazio.setColspan(7);
             vazio.setPadding(6);
             vazio.setBorderColor(BORDA);
             tabela.addCell(vazio);
         } else {
             for (AlmoxarifadoEstoque estoque : estoques) {
+                Double preco = estoque.getProduto().getPreco();
+                Double valorTotal = preco == null ? null : estoque.getQuantidade() * preco;
+
                 tabela.addCell(celulaTabela(String.valueOf(estoque.getProduto().getId())));
                 tabela.addCell(celulaTabela(estoque.getProduto().getNome()));
                 tabela.addCell(celulaTabela(estoque.getProduto().getCategoria().getNome()));
                 tabela.addCell(celulaTabela(estoque.getProduto().getUnidadeMedida().name()));
                 tabela.addCell(celulaTabela(String.valueOf(estoque.getQuantidade())));
-                tabela.addCell(celulaTabela(formatarMoeda(estoque.getProduto().getPreco())));
+                tabela.addCell(celulaTabela(preco == null ? "Sem custo" : formatarMoeda(preco)));
+                tabela.addCell(celulaTabela(valorTotal == null ? "—" : formatarMoeda(valorTotal)));
             }
         }
 
-        PdfPCell total = new PdfPCell(new Phrase("Total de itens em estoque: " + calcularQuantidadeTotal(estoques), fonteNegrito(8, Color.BLACK)));
-        total.setColspan(6);
+        PdfPCell total = new PdfPCell(new Phrase(
+                "Total de unidades: " + calcularQuantidadeTotal(estoques)
+                        + "   |   Valor total conhecido: " + formatarMoeda(calcularValorTotalEstoque(estoques))
+                        + "   |   Produtos sem custo: " + calcularProdutosSemCusto(estoques),
+                fonteNegrito(8, Color.BLACK)
+        ));
+        total.setColspan(7);
         total.setHorizontalAlignment(Element.ALIGN_RIGHT);
         total.setPadding(6);
         total.setBorderColor(BORDA);
@@ -611,6 +622,23 @@ public class PdfService {
             total += item.valorTotal();
         }
         return total;
+    }
+
+    private Double calcularValorTotalEstoque(List<AlmoxarifadoEstoque> estoques) {
+        double total = 0.0;
+        for (AlmoxarifadoEstoque estoque : estoques) {
+            Double preco = estoque.getProduto().getPreco();
+            if (preco != null) {
+                total += estoque.getQuantidade() * preco;
+            }
+        }
+        return total;
+    }
+
+    private long calcularProdutosSemCusto(List<AlmoxarifadoEstoque> estoques) {
+        return estoques.stream()
+                .filter(estoque -> estoque.getProduto().getPreco() == null)
+                .count();
     }
 
     private Integer calcularQuantidadeTotal(List<AlmoxarifadoEstoque> estoques) {
