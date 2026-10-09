@@ -6,6 +6,8 @@ import com.marlondev.stockflow.domain.Almoxarifado;
 import com.marlondev.stockflow.domain.AlmoxarifadoEstoque;
 import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.OrdemServicoItem;
+import com.marlondev.stockflow.domain.enums.ParticipacaoRelatorioTecnicoEnum;
+import com.marlondev.stockflow.dto.RelatorioTecnicoAtendimentoDTO;
 import com.marlondev.stockflow.domain.enums.TipoPessoaEnum;
 import com.marlondev.stockflow.repositories.AlmoxarifadoEstoqueRepository;
 import com.marlondev.stockflow.repositories.AlmoxarifadoRepository;
@@ -22,7 +24,9 @@ import org.openpdf.text.PageSize;
 import org.openpdf.text.Paragraph;
 import org.openpdf.text.Phrase;
 import org.openpdf.text.pdf.PdfPCell;
+import org.openpdf.text.pdf.PdfPageEventHelper;
 import org.openpdf.text.pdf.PdfPTable;
+import org.openpdf.text.pdf.PdfContentByte;
 import org.openpdf.text.pdf.PdfWriter;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +43,7 @@ import java.util.Locale;
 public class PdfService {
 
     private static final DateTimeFormatter DATA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter DATA_HORA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final NumberFormat MOEDA_FORMATTER = NumberFormat.getCurrencyInstance(Locale.of("pt", "BR"));
     private static final Color CINZA_ESCURO = new Color(36, 39, 44);
     private static final Color CINZA_CLARO = new Color(232, 235, 238);
@@ -48,15 +53,18 @@ public class PdfService {
     private final OrdemServicoItemRepository ordemServicoItemRepository;
     private final AlmoxarifadoRepository almoxarifadoRepository;
     private final AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository;
+    private final RelatorioTecnicoService relatorioTecnicoService;
 
     public PdfService(OrdemDeServicoRepository ordemDeServicoRepository,
                       OrdemServicoItemRepository ordemServicoItemRepository,
                       AlmoxarifadoRepository almoxarifadoRepository,
-                      AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository) {
+                      AlmoxarifadoEstoqueRepository almoxarifadoEstoqueRepository,
+                      RelatorioTecnicoService relatorioTecnicoService) {
         this.ordemDeServicoRepository = ordemDeServicoRepository;
         this.ordemServicoItemRepository = ordemServicoItemRepository;
         this.almoxarifadoRepository = almoxarifadoRepository;
         this.almoxarifadoEstoqueRepository = almoxarifadoEstoqueRepository;
+        this.relatorioTecnicoService = relatorioTecnicoService;
     }
 
     public byte[] gerarPdfOrdemServico(Long id) {
@@ -126,6 +134,49 @@ public class PdfService {
             throw new DatabaseException("Erro ao gerar relat\u00f3rio de produtos da ordem de servi\u00e7o");
         } catch (Exception ex) {
             throw new DatabaseException("Erro inesperado ao gerar relat\u00f3rio de produtos da ordem de servi\u00e7o");
+        }
+    }
+
+    public byte[] gerarRelatorioAtendimentosTecnicos(LocalDate dataInicial,
+                                                     LocalDate dataFinal,
+                                                     Long tecnicoId,
+                                                     ParticipacaoRelatorioTecnicoEnum participacao,
+                                                     Long tipoOrdemServicoId) {
+        List<RelatorioTecnicoAtendimentoDTO> atendimentos = relatorioTecnicoService.buscarAtendimentosParaPdf(
+                dataInicial,
+                dataFinal,
+                tecnicoId,
+                participacao,
+                tipoOrdemServicoId
+        );
+        ParticipacaoRelatorioTecnicoEnum participacaoResolvida =
+                participacao == null ? ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL : participacao;
+        String tecnico = relatorioTecnicoService.buscarNomeTecnicoFiltro(tecnicoId);
+        String tipo = relatorioTecnicoService.buscarNomeTipoOrdemServicoFiltro(tipoOrdemServicoId);
+
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4.rotate(), 24, 24, 24, 30);
+            PdfWriter writer = PdfWriter.getInstance(document, outputStream);
+            writer.setPageEvent(new NumeroPaginaEvent());
+            document.open();
+
+            adicionarCabecalhoRelatorioAtendimentos(
+                    document,
+                    dataInicial,
+                    dataFinal,
+                    tecnico,
+                    participacaoResolvida,
+                    tipo,
+                    atendimentos.size()
+            );
+            adicionarTabelaAtendimentosTecnicos(document, atendimentos, tecnicoId);
+
+            document.close();
+            return outputStream.toByteArray();
+        } catch (DocumentException ex) {
+            throw new DatabaseException("Erro ao gerar relatório de atendimentos técnicos");
+        } catch (Exception ex) {
+            throw new DatabaseException("Erro inesperado ao gerar relatório de atendimentos técnicos");
         }
     }
 
@@ -386,6 +437,92 @@ public class PdfService {
         document.add(tabela);
     }
 
+    private void adicionarCabecalhoRelatorioAtendimentos(Document document,
+                                                         LocalDate dataInicial,
+                                                         LocalDate dataFinal,
+                                                         String tecnico,
+                                                         ParticipacaoRelatorioTecnicoEnum participacao,
+                                                         String tipo,
+                                                         int total) throws DocumentException {
+        Paragraph sistema = new Paragraph("STOCKFLOW", fonteNegrito(16, CINZA_ESCURO));
+        sistema.setAlignment(Element.ALIGN_CENTER);
+        sistema.setSpacingAfter(4);
+        document.add(sistema);
+
+        Paragraph titulo = new Paragraph("RELATÓRIO DE ATENDIMENTOS TÉCNICOS", fonteNegrito(13, Color.BLACK));
+        titulo.setAlignment(Element.ALIGN_CENTER);
+        titulo.setSpacingAfter(12);
+        document.add(titulo);
+
+        PdfPTable dados = new PdfPTable(4);
+        dados.setWidthPercentage(100);
+        dados.setWidths(new float[]{1.2f, 1.6f, 1.3f, 1.2f});
+        dados.setSpacingAfter(10);
+
+        adicionarTituloSecao(dados, "FILTROS DO RELATÓRIO", 4);
+        dados.addCell(celulaCampo("Período", formatarData(dataInicial) + " até " + formatarData(dataFinal), 1));
+        dados.addCell(celulaCampo("Técnico", tecnico, 1));
+        dados.addCell(celulaCampo("Participação", participacao.name(), 1));
+        dados.addCell(celulaCampo("Tipo de OS", tipo == null ? "Todos os tipos" : tipo, 1));
+        dados.addCell(celulaCampo("Emissão", LocalDateTime.now().format(DATA_HORA_FORMATTER), 1));
+        dados.addCell(celulaCampo("Total de OS distintas", String.valueOf(total), 1));
+        dados.addCell(celulaCampo(
+                "Critério",
+                "O período considera a conclusão do atendimento técnico. O status exibido corresponde à situação atual da ordem de serviço.",
+                2
+        ));
+
+        document.add(dados);
+    }
+
+    private void adicionarTabelaAtendimentosTecnicos(Document document,
+                                                     List<RelatorioTecnicoAtendimentoDTO> atendimentos,
+                                                     Long tecnicoId) throws DocumentException {
+        PdfPTable tabela = new PdfPTable(tecnicoId == null ? 7 : 8);
+        tabela.setWidthPercentage(100);
+        if (tecnicoId == null) {
+            tabela.setWidths(new float[]{0.6f, 1.8f, 1.4f, 1.8f, 1.4f, 1f, 0.9f});
+        } else {
+            tabela.setWidths(new float[]{0.6f, 1.7f, 1.3f, 1.7f, 1.2f, 1.1f, 0.9f, 1.1f});
+        }
+        tabela.setHeaderRows(1);
+        tabela.setSpacingAfter(8);
+
+        adicionarCabecalhoTabela(tabela, "OS");
+        adicionarCabecalhoTabela(tabela, "Cliente");
+        adicionarCabecalhoTabela(tabela, "Tipo");
+        adicionarCabecalhoTabela(tabela, "Responsável / Ajudante");
+        adicionarCabecalhoTabela(tabela, "Conclusão");
+        adicionarCabecalhoTabela(tabela, "Duração");
+        adicionarCabecalhoTabela(tabela, "Status");
+        if (tecnicoId != null) {
+            adicionarCabecalhoTabela(tabela, "Participação");
+        }
+
+        if (atendimentos.isEmpty()) {
+            PdfPCell vazio = new PdfPCell(new Phrase("Nenhum atendimento encontrado para os filtros informados.", fonteNormal(8, Color.BLACK)));
+            vazio.setColspan(tecnicoId == null ? 7 : 8);
+            vazio.setPadding(6);
+            vazio.setBorderColor(BORDA);
+            tabela.addCell(vazio);
+        } else {
+            for (RelatorioTecnicoAtendimentoDTO atendimento : atendimentos) {
+                tabela.addCell(celulaTabela(String.valueOf(atendimento.getOrdemServicoId())));
+                tabela.addCell(celulaTabela(atendimento.getClienteNome()));
+                tabela.addCell(celulaTabela(atendimento.getTipoOrdemServicoNome()));
+                tabela.addCell(celulaTabela(formatarResponsavelAjudante(atendimento)));
+                tabela.addCell(celulaTabela(formatarDataHora(atendimento.getFimAtendimento())));
+                tabela.addCell(celulaTabela(formatarDuracao(atendimento.getDuracaoAtendimentoSegundos())));
+                tabela.addCell(celulaTabela(atendimento.getStatusAtual() == null ? "" : atendimento.getStatusAtual().name()));
+                if (tecnicoId != null) {
+                    tabela.addCell(celulaTabela(formatarParticipacao(atendimento.getParticipacaoDoTecnico())));
+                }
+            }
+        }
+
+        document.add(tabela);
+    }
+
     private void adicionarTituloSecao(PdfPTable tabela, String texto, int colspan) {
         PdfPCell cell = new PdfPCell(new Phrase(texto, fonteNegrito(8, Color.WHITE)));
         cell.setColspan(colspan);
@@ -461,7 +598,7 @@ public class PdfService {
     }
 
     private String formatarDataHora(LocalDateTime data) {
-        return data == null ? "" : data.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        return data == null ? "" : data.format(DATA_HORA_FORMATTER);
     }
 
     private String formatarMoeda(Double valor) {
@@ -504,5 +641,62 @@ public class PdfService {
 
     private String texto(String valor) {
         return valor == null || valor.isBlank() ? "" : valor;
+    }
+
+    private String formatarResponsavelAjudante(RelatorioTecnicoAtendimentoDTO atendimento) {
+        String responsavel = texto(atendimento.getTecnicoResponsavelNome());
+        String ajudante = texto(atendimento.getTecnicoAjudanteNome());
+
+        if (ajudante.isBlank()) {
+            return "Resp.: " + responsavel;
+        }
+        return "Resp.: " + responsavel + "\nAj.: " + ajudante;
+    }
+
+    private String formatarParticipacao(String participacao) {
+        if ("RESPONSAVEL_E_AJUDANTE".equals(participacao)) {
+            return "Responsável e ajudante";
+        }
+        if ("RESPONSAVEL".equals(participacao)) {
+            return "Responsável";
+        }
+        if ("AJUDANTE".equals(participacao)) {
+            return "Ajudante";
+        }
+        return "";
+    }
+
+    private String formatarDuracao(Long duracaoSegundos) {
+        if (duracaoSegundos == null || duracaoSegundos < 0) {
+            return "—";
+        }
+
+        long minutos = duracaoSegundos / 60;
+        long horas = minutos / 60;
+        long minutosRestantes = minutos % 60;
+
+        if (horas > 0 && minutosRestantes > 0) {
+            return horas + "h " + minutosRestantes + "min";
+        }
+        if (horas > 0) {
+            return horas + "h";
+        }
+        return minutos + "min";
+    }
+
+    private static class NumeroPaginaEvent extends PdfPageEventHelper {
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            PdfContentByte canvas = writer.getDirectContent();
+            Phrase pagina = new Phrase("Página " + writer.getPageNumber(), FontFactory.getFont(FontFactory.HELVETICA, 8, CINZA_ESCURO));
+            org.openpdf.text.pdf.ColumnText.showTextAligned(
+                    canvas,
+                    Element.ALIGN_RIGHT,
+                    pagina,
+                    document.right(),
+                    document.bottom() - 12,
+                    0
+            );
+        }
     }
 }

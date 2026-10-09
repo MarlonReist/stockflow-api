@@ -1,9 +1,15 @@
 package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.enums.StatusEnum;
+import com.marlondev.stockflow.domain.enums.ParticipacaoRelatorioTecnicoEnum;
 import com.marlondev.stockflow.dto.*;
+import com.marlondev.stockflow.repositories.ColaboradorRepository;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
+import com.marlondev.stockflow.repositories.TipoOrdemServicoRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
+import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import com.marlondev.stockflow.domain.enums.AgrupamentoRelatorioEnum;
 
@@ -17,9 +23,15 @@ import java.util.List;
 public class RelatorioTecnicoService {
 
     private final OrdemDeServicoRepository ordemDeServicoRepository;
+    private final ColaboradorRepository colaboradorRepository;
+    private final TipoOrdemServicoRepository tipoOrdemServicoRepository;
 
-    public RelatorioTecnicoService(OrdemDeServicoRepository ordemDeServicoRepository) {
+    public RelatorioTecnicoService(OrdemDeServicoRepository ordemDeServicoRepository,
+                                   ColaboradorRepository colaboradorRepository,
+                                   TipoOrdemServicoRepository tipoOrdemServicoRepository) {
         this.ordemDeServicoRepository = ordemDeServicoRepository;
+        this.colaboradorRepository = colaboradorRepository;
+        this.tipoOrdemServicoRepository = tipoOrdemServicoRepository;
     }
 
     public RelatorioTecnicoResumoDTO buscarResumo(
@@ -198,6 +210,125 @@ public class RelatorioTecnicoService {
 
     public List<RelatorioTecnicoQuantidadePorStatusDTO> buscarDistribuicaoAtualPorStatus() {
         return ordemDeServicoRepository.contarPorStatusAtual();
+    }
+
+    public RelatorioTecnicoAtendimentoPaginaDTO buscarAtendimentos(
+            LocalDate dataInicial,
+            LocalDate dataFinal,
+            Long tecnicoId,
+            ParticipacaoRelatorioTecnicoEnum participacao,
+            Long tipoOrdemServicoId,
+            Integer page,
+            Integer size
+    ) {
+        PeriodoRelatorio periodo = resolverPeriodo(dataInicial, dataFinal);
+        ParticipacaoRelatorioTecnicoEnum participacaoResolvida = resolverParticipacao(participacao);
+        validarFiltros(tecnicoId, tipoOrdemServicoId);
+        validarPaginacao(page, size);
+
+        Page<RelatorioTecnicoAtendimentoDTO> pagina = ordemDeServicoRepository.buscarAtendimentosTecnicos(
+                periodo.inicio(),
+                periodo.fimExclusivo(),
+                tecnicoId,
+                participacaoResolvida.name(),
+                tipoOrdemServicoId,
+                PageRequest.of(page, size)
+        );
+
+        preencherParticipacaoDoTecnico(pagina.getContent(), tecnicoId);
+
+        return new RelatorioTecnicoAtendimentoPaginaDTO(
+                pagina.getContent(),
+                pagina.getTotalElements(),
+                pagina.getTotalPages(),
+                pagina.getNumber(),
+                pagina.getSize()
+        );
+    }
+
+    public List<RelatorioTecnicoAtendimentoDTO> buscarAtendimentosParaPdf(
+            LocalDate dataInicial,
+            LocalDate dataFinal,
+            Long tecnicoId,
+            ParticipacaoRelatorioTecnicoEnum participacao,
+            Long tipoOrdemServicoId
+    ) {
+        PeriodoRelatorio periodo = resolverPeriodo(dataInicial, dataFinal);
+        ParticipacaoRelatorioTecnicoEnum participacaoResolvida = resolverParticipacao(participacao);
+        validarFiltros(tecnicoId, tipoOrdemServicoId);
+
+        List<RelatorioTecnicoAtendimentoDTO> atendimentos = ordemDeServicoRepository.buscarAtendimentosTecnicos(
+                periodo.inicio(),
+                periodo.fimExclusivo(),
+                tecnicoId,
+                participacaoResolvida.name(),
+                tipoOrdemServicoId
+        );
+
+        preencherParticipacaoDoTecnico(atendimentos, tecnicoId);
+        return atendimentos;
+    }
+
+    public String buscarNomeTecnicoFiltro(Long tecnicoId) {
+        if (tecnicoId == null) {
+            return "Todos os técnicos";
+        }
+        return colaboradorRepository.findById(tecnicoId)
+                .orElseThrow(() -> new ResourceNotFoundException(tecnicoId))
+                .getNome();
+    }
+
+    public String buscarNomeTipoOrdemServicoFiltro(Long tipoOrdemServicoId) {
+        if (tipoOrdemServicoId == null) {
+            return null;
+        }
+        return tipoOrdemServicoRepository.findById(tipoOrdemServicoId)
+                .orElseThrow(() -> new ResourceNotFoundException(tipoOrdemServicoId))
+                .getNome();
+    }
+
+    private ParticipacaoRelatorioTecnicoEnum resolverParticipacao(ParticipacaoRelatorioTecnicoEnum participacao) {
+        return participacao == null ? ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL : participacao;
+    }
+
+    private void validarFiltros(Long tecnicoId, Long tipoOrdemServicoId) {
+        if (tecnicoId != null && !colaboradorRepository.existsById(tecnicoId)) {
+            throw new ResourceNotFoundException(tecnicoId);
+        }
+        if (tipoOrdemServicoId != null && !tipoOrdemServicoRepository.existsById(tipoOrdemServicoId)) {
+            throw new ResourceNotFoundException(tipoOrdemServicoId);
+        }
+    }
+
+    private void validarPaginacao(Integer page, Integer size) {
+        if (page == null || page < 0) {
+            throw new DatabaseException("Página deve ser maior ou igual a zero!");
+        }
+        if (size == null || size <= 0) {
+            throw new DatabaseException("Tamanho da página deve ser maior que zero!");
+        }
+        if (size > 100) {
+            throw new DatabaseException("Tamanho da página deve ser no máximo 100!");
+        }
+    }
+
+    private void preencherParticipacaoDoTecnico(List<RelatorioTecnicoAtendimentoDTO> atendimentos, Long tecnicoId) {
+        if (tecnicoId == null) {
+            return;
+        }
+
+        for (RelatorioTecnicoAtendimentoDTO atendimento : atendimentos) {
+            boolean responsavel = tecnicoId.equals(atendimento.getTecnicoResponsavelId());
+            boolean ajudante = tecnicoId.equals(atendimento.getTecnicoAjudanteId());
+
+            if (responsavel && ajudante) {
+                atendimento.setParticipacaoDoTecnico("RESPONSAVEL_E_AJUDANTE");
+            } else if (responsavel) {
+                atendimento.setParticipacaoDoTecnico("RESPONSAVEL");
+            } else if (ajudante) {
+                atendimento.setParticipacaoDoTecnico("AJUDANTE");
+            }
+        }
     }
 
     private record PeriodoRelatorio(LocalDateTime inicio, LocalDateTime fimExclusivo) {

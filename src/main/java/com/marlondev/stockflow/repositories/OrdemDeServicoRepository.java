@@ -2,9 +2,12 @@ package com.marlondev.stockflow.repositories;
 
 import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.enums.StatusEnum;
+import com.marlondev.stockflow.dto.RelatorioTecnicoAtendimentoDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorStatusDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTecnicoDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTipoDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -243,4 +246,121 @@ public interface OrdemDeServicoRepository extends JpaRepository<OrdemDeServico, 
         ORDER BY os.status ASC
         """)
     List<RelatorioTecnicoQuantidadePorStatusDTO> contarPorStatusAtual();
+
+    @Query(value = """
+            SELECT new com.marlondev.stockflow.dto.RelatorioTecnicoAtendimentoDTO(
+                os.id,
+                cliente.nome,
+                tipo.id,
+                tipo.nome,
+                responsavel.id,
+                responsavel.nome,
+                ajudante.id,
+                ajudante.nome,
+                os.inicioAtendimento,
+                os.fimAtendimento,
+                os.status
+            )
+            FROM OrdemDeServico os
+            JOIN os.cliente cliente
+            LEFT JOIN os.tipoOrdemServico tipo
+            LEFT JOIN os.colaborador responsavel
+            LEFT JOIN os.ajudante ajudante
+            WHERE os.fimAtendimento >= :inicio
+              AND os.fimAtendimento < :fimExclusivo
+              AND (:tipoOrdemServicoId IS NULL OR tipo.id = :tipoOrdemServicoId)
+              AND (
+                    (:participacao = 'RESPONSAVEL' AND (
+                        (:tecnicoId IS NULL AND responsavel IS NOT NULL)
+                        OR (:tecnicoId IS NOT NULL AND responsavel.id = :tecnicoId)
+                    ))
+                    OR (:participacao = 'AJUDANTE' AND (
+                        (:tecnicoId IS NULL AND ajudante IS NOT NULL)
+                        OR (:tecnicoId IS NOT NULL AND ajudante.id = :tecnicoId)
+                    ))
+                    OR (:participacao = 'AMBOS' AND (
+                        (:tecnicoId IS NULL AND (responsavel IS NOT NULL OR ajudante IS NOT NULL))
+                        OR (:tecnicoId IS NOT NULL AND (responsavel.id = :tecnicoId OR ajudante.id = :tecnicoId))
+                    ))
+              )
+            ORDER BY os.fimAtendimento ASC, os.id ASC
+            """,
+            countQuery = """
+            SELECT COUNT(os)
+            FROM OrdemDeServico os
+            LEFT JOIN os.tipoOrdemServico tipo
+            LEFT JOIN os.colaborador responsavel
+            LEFT JOIN os.ajudante ajudante
+            WHERE os.fimAtendimento >= :inicio
+              AND os.fimAtendimento < :fimExclusivo
+              AND (:tipoOrdemServicoId IS NULL OR tipo.id = :tipoOrdemServicoId)
+              AND (
+                    (:participacao = 'RESPONSAVEL' AND (
+                        (:tecnicoId IS NULL AND responsavel IS NOT NULL)
+                        OR (:tecnicoId IS NOT NULL AND responsavel.id = :tecnicoId)
+                    ))
+                    OR (:participacao = 'AJUDANTE' AND (
+                        (:tecnicoId IS NULL AND ajudante IS NOT NULL)
+                        OR (:tecnicoId IS NOT NULL AND ajudante.id = :tecnicoId)
+                    ))
+                    OR (:participacao = 'AMBOS' AND (
+                        (:tecnicoId IS NULL AND (responsavel IS NOT NULL OR ajudante IS NOT NULL))
+                        OR (:tecnicoId IS NOT NULL AND (responsavel.id = :tecnicoId OR ajudante.id = :tecnicoId))
+                    ))
+              )
+            """)
+    Page<RelatorioTecnicoAtendimentoDTO> buscarAtendimentosTecnicos(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fimExclusivo") LocalDateTime fimExclusivo,
+            @Param("tecnicoId") Long tecnicoId,
+            @Param("participacao") String participacao,
+            @Param("tipoOrdemServicoId") Long tipoOrdemServicoId,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT new com.marlondev.stockflow.dto.RelatorioTecnicoAtendimentoDTO(
+                os.id,
+                cliente.nome,
+                tipo.id,
+                tipo.nome,
+                responsavel.id,
+                responsavel.nome,
+                ajudante.id,
+                ajudante.nome,
+                os.inicioAtendimento,
+                os.fimAtendimento,
+                os.status
+            )
+            FROM OrdemDeServico os
+            JOIN os.cliente cliente
+            LEFT JOIN os.tipoOrdemServico tipo
+            LEFT JOIN os.colaborador responsavel
+            LEFT JOIN os.ajudante ajudante
+            WHERE os.fimAtendimento >= :inicio
+              AND os.fimAtendimento < :fimExclusivo
+              AND (:tipoOrdemServicoId IS NULL OR tipo.id = :tipoOrdemServicoId)
+              AND (
+                    (:participacao = 'RESPONSAVEL' AND (
+                        (:tecnicoId IS NULL AND responsavel IS NOT NULL)
+                        OR (:tecnicoId IS NOT NULL AND responsavel.id = :tecnicoId)
+                    ))
+                    OR (:participacao = 'AJUDANTE' AND (
+                        (:tecnicoId IS NULL AND ajudante IS NOT NULL)
+                        OR (:tecnicoId IS NOT NULL AND ajudante.id = :tecnicoId)
+                    ))
+                    OR (:participacao = 'AMBOS' AND (
+                        (:tecnicoId IS NULL AND (responsavel IS NOT NULL OR ajudante IS NOT NULL))
+                        OR (:tecnicoId IS NOT NULL AND (responsavel.id = :tecnicoId OR ajudante.id = :tecnicoId))
+                    ))
+              )
+            ORDER BY os.fimAtendimento ASC, os.id ASC
+            """)
+    List<RelatorioTecnicoAtendimentoDTO> buscarAtendimentosTecnicos(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fimExclusivo") LocalDateTime fimExclusivo,
+            @Param("tecnicoId") Long tecnicoId,
+            @Param("participacao") String participacao,
+            @Param("tipoOrdemServicoId") Long tipoOrdemServicoId
+    );
 }

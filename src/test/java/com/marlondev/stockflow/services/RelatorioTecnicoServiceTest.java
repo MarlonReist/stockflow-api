@@ -2,16 +2,24 @@ package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.enums.StatusEnum;
 import com.marlondev.stockflow.domain.enums.AgrupamentoRelatorioEnum;
+import com.marlondev.stockflow.domain.enums.ParticipacaoRelatorioTecnicoEnum;
+import com.marlondev.stockflow.dto.RelatorioTecnicoAtendimentoDTO;
+import com.marlondev.stockflow.dto.RelatorioTecnicoAtendimentoPaginaDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorStatusDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTecnicoDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTipoDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoResumoDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoSerieTemporalDTO;
+import com.marlondev.stockflow.repositories.ColaboradorRepository;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
+import com.marlondev.stockflow.repositories.TipoOrdemServicoRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
+import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,11 +38,17 @@ class RelatorioTecnicoServiceTest {
     @Mock
     private OrdemDeServicoRepository ordemDeServicoRepository;
 
+    @Mock
+    private ColaboradorRepository colaboradorRepository;
+
+    @Mock
+    private TipoOrdemServicoRepository tipoOrdemServicoRepository;
+
     private RelatorioTecnicoService service;
 
     @BeforeEach
     void setUp() {
-        service = new RelatorioTecnicoService(ordemDeServicoRepository);
+        service = new RelatorioTecnicoService(ordemDeServicoRepository, colaboradorRepository, tipoOrdemServicoRepository);
     }
 
     @Test
@@ -325,5 +339,386 @@ class RelatorioTecnicoServiceTest {
 
         assertEquals(esperado, resultado);
         verify(ordemDeServicoRepository).contarPorStatusAtual();
+    }
+
+    @Test
+    void buscarAtendimentosDeveFiltrarPorResponsavelComPaginacao() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 6);
+        LocalDateTime inicio = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2026, 10, 7, 0, 0);
+        RelatorioTecnicoAtendimentoDTO atendimento = new RelatorioTecnicoAtendimentoDTO(
+                1L,
+                "Cliente A",
+                2L,
+                "Instalação",
+                10L,
+                "João",
+                11L,
+                "Carlos",
+                LocalDateTime.of(2026, 10, 2, 8, 0),
+                LocalDateTime.of(2026, 10, 2, 9, 30),
+                StatusEnum.AGUARDANDO_CONFERENCIA
+        );
+
+        when(colaboradorRepository.existsById(10L)).thenReturn(true);
+        when(tipoOrdemServicoRepository.existsById(2L)).thenReturn(true);
+        when(ordemDeServicoRepository.buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                10L,
+                "RESPONSAVEL",
+                2L,
+                PageRequest.of(0, 20)
+        )).thenReturn(new PageImpl<>(List.of(atendimento), PageRequest.of(0, 20), 1));
+
+        RelatorioTecnicoAtendimentoPaginaDTO resultado = service.buscarAtendimentos(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL,
+                2L,
+                0,
+                20
+        );
+
+        assertEquals(1L, resultado.getTotalElements());
+        assertEquals(1, resultado.getContent().size());
+        assertEquals("RESPONSAVEL", resultado.getContent().get(0).getParticipacaoDoTecnico());
+        assertEquals(5400L, resultado.getContent().get(0).getDuracaoAtendimentoSegundos());
+        verify(ordemDeServicoRepository).buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                10L,
+                "RESPONSAVEL",
+                2L,
+                PageRequest.of(0, 20)
+        );
+    }
+
+    @Test
+    void buscarAtendimentosDeveFiltrarPorAjudante() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 6);
+        LocalDateTime inicio = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2026, 10, 7, 0, 0);
+        RelatorioTecnicoAtendimentoDTO atendimento = new RelatorioTecnicoAtendimentoDTO(
+                2L,
+                "Cliente B",
+                3L,
+                "Manutenção",
+                12L,
+                "Pedro",
+                10L,
+                "João",
+                LocalDateTime.of(2026, 10, 3, 10, 0),
+                LocalDateTime.of(2026, 10, 3, 10, 47),
+                StatusEnum.FINALIZADA
+        );
+
+        when(colaboradorRepository.existsById(10L)).thenReturn(true);
+        when(ordemDeServicoRepository.buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                10L,
+                "AJUDANTE",
+                null,
+                PageRequest.of(0, 10)
+        )).thenReturn(new PageImpl<>(List.of(atendimento), PageRequest.of(0, 10), 1));
+
+        RelatorioTecnicoAtendimentoPaginaDTO resultado = service.buscarAtendimentos(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.AJUDANTE,
+                null,
+                0,
+                10
+        );
+
+        assertEquals("AJUDANTE", resultado.getContent().get(0).getParticipacaoDoTecnico());
+        assertEquals(2820L, resultado.getContent().get(0).getDuracaoAtendimentoSegundos());
+        verify(ordemDeServicoRepository).buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                10L,
+                "AJUDANTE",
+                null,
+                PageRequest.of(0, 10)
+        );
+    }
+
+    @Test
+    void buscarAtendimentosAmbosNaoDuplicaRegistroRetornadoPeloRepository() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 6);
+        LocalDateTime inicio = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2026, 10, 7, 0, 0);
+        RelatorioTecnicoAtendimentoDTO atendimento = new RelatorioTecnicoAtendimentoDTO(
+                3L,
+                "Cliente C",
+                4L,
+                "Retirada",
+                10L,
+                "João",
+                10L,
+                "João",
+                LocalDateTime.of(2026, 10, 4, 8, 0),
+                LocalDateTime.of(2026, 10, 4, 8, 30),
+                StatusEnum.AGUARDANDO_CONFERENCIA
+        );
+
+        when(colaboradorRepository.existsById(10L)).thenReturn(true);
+        when(ordemDeServicoRepository.buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                10L,
+                "AMBOS",
+                null,
+                PageRequest.of(0, 20)
+        )).thenReturn(new PageImpl<>(List.of(atendimento), PageRequest.of(0, 20), 1));
+
+        RelatorioTecnicoAtendimentoPaginaDTO resultado = service.buscarAtendimentos(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.AMBOS,
+                null,
+                0,
+                20
+        );
+
+        assertEquals(1, resultado.getContent().size());
+        assertEquals("RESPONSAVEL_E_AJUDANTE", resultado.getContent().get(0).getParticipacaoDoTecnico());
+    }
+
+    @Test
+    void buscarAtendimentosSemTecnicoNaoPreencheParticipacaoDoTecnico() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 6);
+        LocalDateTime inicio = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2026, 10, 7, 0, 0);
+        RelatorioTecnicoAtendimentoDTO atendimento = new RelatorioTecnicoAtendimentoDTO(
+                4L,
+                "Cliente D",
+                5L,
+                "Instalação",
+                10L,
+                "João",
+                null,
+                null,
+                LocalDateTime.of(2026, 10, 5, 8, 0),
+                LocalDateTime.of(2026, 10, 5, 9, 0),
+                StatusEnum.FINALIZADA
+        );
+
+        when(ordemDeServicoRepository.buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                null,
+                "RESPONSAVEL",
+                null,
+                PageRequest.of(0, 20)
+        )).thenReturn(new PageImpl<>(List.of(atendimento), PageRequest.of(0, 20), 1));
+
+        RelatorioTecnicoAtendimentoPaginaDTO resultado = service.buscarAtendimentos(
+                dataInicial,
+                dataFinal,
+                null,
+                null,
+                null,
+                0,
+                20
+        );
+
+        assertEquals(1, resultado.getContent().size());
+        assertEquals(null, resultado.getContent().get(0).getParticipacaoDoTecnico());
+        verify(ordemDeServicoRepository).buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                null,
+                "RESPONSAVEL",
+                null,
+                PageRequest.of(0, 20)
+        );
+    }
+
+    @Test
+    void buscarAtendimentosDeveRetornarPaginaVaziaQuandoNaoHouverRegistros() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 1);
+        LocalDateTime inicio = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2026, 10, 2, 0, 0);
+
+        when(ordemDeServicoRepository.buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                null,
+                "AMBOS",
+                null,
+                PageRequest.of(0, 20)
+        )).thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 20), 0));
+
+        RelatorioTecnicoAtendimentoPaginaDTO resultado = service.buscarAtendimentos(
+                dataInicial,
+                dataFinal,
+                null,
+                ParticipacaoRelatorioTecnicoEnum.AMBOS,
+                null,
+                0,
+                20
+        );
+
+        assertEquals(0L, resultado.getTotalElements());
+        assertEquals(0, resultado.getTotalPages());
+        assertEquals(0, resultado.getContent().size());
+    }
+
+    @Test
+    void buscarAtendimentosParaPdfDeveBuscarTodosSemPaginacao() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 6);
+        LocalDateTime inicio = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime fimExclusivo = LocalDateTime.of(2026, 10, 7, 0, 0);
+        RelatorioTecnicoAtendimentoDTO atendimento = new RelatorioTecnicoAtendimentoDTO(
+                5L,
+                "Cliente E",
+                7L,
+                "Suporte",
+                10L,
+                "João",
+                11L,
+                "Carlos",
+                LocalDateTime.of(2026, 10, 6, 23, 0),
+                LocalDateTime.of(2026, 10, 6, 23, 59),
+                StatusEnum.FINALIZADA
+        );
+
+        when(colaboradorRepository.existsById(10L)).thenReturn(true);
+        when(tipoOrdemServicoRepository.existsById(7L)).thenReturn(true);
+        when(ordemDeServicoRepository.buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                10L,
+                "AMBOS",
+                7L
+        )).thenReturn(List.of(atendimento));
+
+        List<RelatorioTecnicoAtendimentoDTO> resultado = service.buscarAtendimentosParaPdf(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.AMBOS,
+                7L
+        );
+
+        assertEquals(1, resultado.size());
+        assertEquals("RESPONSAVEL", resultado.get(0).getParticipacaoDoTecnico());
+        verify(ordemDeServicoRepository).buscarAtendimentosTecnicos(
+                inicio,
+                fimExclusivo,
+                10L,
+                "AMBOS",
+                7L
+        );
+    }
+
+    @Test
+    void buscarAtendimentosDeveBloquearPeriodoInvalido() {
+        assertThrows(DatabaseException.class, () -> service.buscarAtendimentos(
+                LocalDate.of(2026, 10, 2),
+                LocalDate.of(2026, 10, 1),
+                null,
+                ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL,
+                null,
+                0,
+                20
+        ));
+    }
+
+    @Test
+    void buscarAtendimentosDeveBloquearPaginacaoInvalida() {
+        assertThrows(DatabaseException.class, () -> service.buscarAtendimentos(
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 1),
+                null,
+                ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL,
+                null,
+                -1,
+                20
+        ));
+
+        assertThrows(DatabaseException.class, () -> service.buscarAtendimentos(
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 1),
+                null,
+                ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL,
+                null,
+                0,
+                101
+        ));
+    }
+
+    @Test
+    void buscarAtendimentosDeveBloquearTecnicoInexistente() {
+        when(colaboradorRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> service.buscarAtendimentos(
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 6),
+                99L,
+                ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL,
+                null,
+                0,
+                20
+        ));
+    }
+
+    @Test
+    void buscarAtendimentosDeveBloquearTipoInexistente() {
+        when(tipoOrdemServicoRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> service.buscarAtendimentos(
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 6),
+                null,
+                ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL,
+                99L,
+                0,
+                20
+        ));
+    }
+
+    @Test
+    void atendimentoDeveRetornarDuracaoNulaQuandoInicioAusenteOuInvalido() {
+        RelatorioTecnicoAtendimentoDTO semInicio = new RelatorioTecnicoAtendimentoDTO(
+                1L,
+                "Cliente",
+                1L,
+                "Tipo",
+                1L,
+                "Técnico",
+                null,
+                null,
+                null,
+                LocalDateTime.of(2026, 10, 1, 10, 0),
+                StatusEnum.FINALIZADA
+        );
+        RelatorioTecnicoAtendimentoDTO duracaoInvalida = new RelatorioTecnicoAtendimentoDTO(
+                2L,
+                "Cliente",
+                1L,
+                "Tipo",
+                1L,
+                "Técnico",
+                null,
+                null,
+                LocalDateTime.of(2026, 10, 1, 11, 0),
+                LocalDateTime.of(2026, 10, 1, 10, 0),
+                StatusEnum.FINALIZADA
+        );
+
+        assertEquals(null, semInicio.getDuracaoAtendimentoSegundos());
+        assertEquals(null, duracaoInvalida.getDuracaoAtendimentoSegundos());
     }
 }

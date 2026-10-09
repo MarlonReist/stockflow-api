@@ -1,9 +1,12 @@
 package com.marlondev.stockflow.controller;
 
 import com.marlondev.stockflow.dto.*;
+import com.marlondev.stockflow.services.PdfService;
 import com.marlondev.stockflow.services.RelatorioTecnicoService;
 import com.marlondev.stockflow.domain.enums.AgrupamentoRelatorioEnum;
+import com.marlondev.stockflow.domain.enums.ParticipacaoRelatorioTecnicoEnum;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +22,11 @@ import java.util.List;
 public class RelatorioTecnicoController {
 
     private final RelatorioTecnicoService relatorioTecnicoService;
+    private final PdfService pdfService;
 
-    public RelatorioTecnicoController(RelatorioTecnicoService relatorioTecnicoService) {
+    public RelatorioTecnicoController(RelatorioTecnicoService relatorioTecnicoService, PdfService pdfService) {
         this.relatorioTecnicoService = relatorioTecnicoService;
+        this.pdfService = pdfService;
     }
 
     @GetMapping(value = "/resumo")
@@ -118,5 +123,51 @@ public class RelatorioTecnicoController {
                 relatorioTecnicoService.buscarDistribuicaoAtualPorStatus();
 
         return ResponseEntity.ok().body(dados);
+    }
+
+    @GetMapping(value = "/atendimentos")
+    public ResponseEntity<RelatorioTecnicoAtendimentoPaginaDTO> buscarAtendimentos(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicial,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFinal,
+            @RequestParam(required = false) Long tecnicoId,
+            @RequestParam(defaultValue = "RESPONSAVEL") ParticipacaoRelatorioTecnicoEnum participacao,
+            @RequestParam(required = false) Long tipoOrdemServicoId,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size
+    ) {
+        RelatorioTecnicoAtendimentoPaginaDTO dados = relatorioTecnicoService.buscarAtendimentos(
+                dataInicial,
+                dataFinal,
+                tecnicoId,
+                participacao,
+                tipoOrdemServicoId,
+                page,
+                size
+        );
+
+        return ResponseEntity.ok().body(dados);
+    }
+
+    @GetMapping(value = "/atendimentos/pdf")
+    public ResponseEntity<byte[]> gerarAtendimentosPdf(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicial,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFinal,
+            @RequestParam(required = false) Long tecnicoId,
+            @RequestParam(defaultValue = "RESPONSAVEL") ParticipacaoRelatorioTecnicoEnum participacao,
+            @RequestParam(required = false) Long tipoOrdemServicoId
+    ) {
+        byte[] pdf = pdfService.gerarRelatorioAtendimentosTecnicos(
+                dataInicial,
+                dataFinal,
+                tecnicoId,
+                participacao,
+                tipoOrdemServicoId
+        );
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "inline; filename=relatorio-atendimentos-tecnicos-"
+                        + dataInicial + "-" + dataFinal + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 }

@@ -1,12 +1,16 @@
 package com.marlondev.stockflow.controller;
 
 import com.marlondev.stockflow.domain.enums.AgrupamentoRelatorioEnum;
+import com.marlondev.stockflow.domain.enums.ParticipacaoRelatorioTecnicoEnum;
 import com.marlondev.stockflow.domain.enums.StatusEnum;
+import com.marlondev.stockflow.dto.RelatorioTecnicoAtendimentoDTO;
+import com.marlondev.stockflow.dto.RelatorioTecnicoAtendimentoPaginaDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorStatusDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTecnicoDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoQuantidadePorTipoDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoResumoDTO;
 import com.marlondev.stockflow.dto.RelatorioTecnicoSerieTemporalDTO;
+import com.marlondev.stockflow.services.PdfService;
 import com.marlondev.stockflow.services.RelatorioTecnicoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,11 +32,14 @@ class RelatorioTecnicoControllerTest {
     @Mock
     private RelatorioTecnicoService relatorioTecnicoService;
 
+    @Mock
+    private PdfService pdfService;
+
     private RelatorioTecnicoController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new RelatorioTecnicoController(relatorioTecnicoService);
+        controller = new RelatorioTecnicoController(relatorioTecnicoService, pdfService);
     }
 
     @Test
@@ -162,5 +169,84 @@ class RelatorioTecnicoControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertEquals(esperado, response.getBody());
         verify(relatorioTecnicoService).buscarDistribuicaoAtualPorStatus();
+    }
+
+    @Test
+    void buscarAtendimentosDeveRetornarPaginaDoService() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 7);
+        RelatorioTecnicoAtendimentoPaginaDTO esperado = new RelatorioTecnicoAtendimentoPaginaDTO(
+                List.of(new RelatorioTecnicoAtendimentoDTO()),
+                1L,
+                1,
+                0,
+                20
+        );
+
+        when(relatorioTecnicoService.buscarAtendimentos(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.AMBOS,
+                20L,
+                0,
+                20
+        )).thenReturn(esperado);
+
+        ResponseEntity<RelatorioTecnicoAtendimentoPaginaDTO> response = controller.buscarAtendimentos(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.AMBOS,
+                20L,
+                0,
+                20
+        );
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(esperado, response.getBody());
+        verify(relatorioTecnicoService).buscarAtendimentos(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.AMBOS,
+                20L,
+                0,
+                20
+        );
+    }
+
+    @Test
+    void gerarAtendimentosPdfDeveRetornarPdfDoService() {
+        LocalDate dataInicial = LocalDate.of(2026, 10, 1);
+        LocalDate dataFinal = LocalDate.of(2026, 10, 7);
+        byte[] pdf = "%PDF-1.4".getBytes();
+
+        when(pdfService.gerarRelatorioAtendimentosTecnicos(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL,
+                20L
+        )).thenReturn(pdf);
+
+        ResponseEntity<byte[]> response = controller.gerarAtendimentosPdf(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL,
+                20L
+        );
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("application/pdf", response.getHeaders().getContentType().toString());
+        assertEquals(pdf, response.getBody());
+        verify(pdfService).gerarRelatorioAtendimentosTecnicos(
+                dataInicial,
+                dataFinal,
+                10L,
+                ParticipacaoRelatorioTecnicoEnum.RESPONSAVEL,
+                20L
+        );
     }
 }
