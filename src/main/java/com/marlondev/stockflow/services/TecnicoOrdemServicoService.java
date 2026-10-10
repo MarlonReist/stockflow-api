@@ -2,6 +2,7 @@ package com.marlondev.stockflow.services;
 
 import com.marlondev.stockflow.domain.Colaborador;
 import com.marlondev.stockflow.domain.OrdemDeServico;
+import com.marlondev.stockflow.domain.OrdemServicoAnexo;
 import com.marlondev.stockflow.domain.Usuario;
 import com.marlondev.stockflow.domain.enums.PerfilUsuario;
 import com.marlondev.stockflow.domain.enums.StatusEnum;
@@ -13,18 +14,28 @@ import com.marlondev.stockflow.dto.OrdemServicoItemRequestDTO;
 import com.marlondev.stockflow.dto.OrdemServicoItemResponseDTO;
 import com.marlondev.stockflow.dto.TecnicoAjudanteRequestDTO;
 import com.marlondev.stockflow.dto.TecnicoAjudanteResponseDTO;
+import com.marlondev.stockflow.dto.TecnicoHistoricoOrdemServicoDetalheDTO;
+import com.marlondev.stockflow.dto.TecnicoHistoricoOrdemServicoPaginaDTO;
+import com.marlondev.stockflow.dto.TecnicoHistoricoOrdemServicoResumoDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoDetalheDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoItemRequestDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoResumoDTO;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
 import com.marlondev.stockflow.repositories.OrdemServicoAnexoRepository;
 import com.marlondev.stockflow.repositories.OrdemServicoItemRepository;
+import com.marlondev.stockflow.repositories.TipoOrdemServicoRepository;
 import com.marlondev.stockflow.repositories.UsuarioRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ForbiddenException;
+import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
+import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -43,6 +54,7 @@ public class TecnicoOrdemServicoService {
     private final OrdemServicoItemService ordemServicoItemService;
     private final OrdemServicoAnexoService ordemServicoAnexoService;
     private final UsuarioRepository usuarioRepository;
+    private final TipoOrdemServicoRepository tipoOrdemServicoRepository;
 
     public TecnicoOrdemServicoService(
             OrdemDeServicoRepository ordemDeServicoRepository,
@@ -51,7 +63,8 @@ public class TecnicoOrdemServicoService {
             OrdemDeServicoService ordemDeServicoService,
             OrdemServicoItemService ordemServicoItemService,
             OrdemServicoAnexoService ordemServicoAnexoService,
-            UsuarioRepository usuarioRepository
+            UsuarioRepository usuarioRepository,
+            TipoOrdemServicoRepository tipoOrdemServicoRepository
     ) {
         this.ordemDeServicoRepository = ordemDeServicoRepository;
         this.ordemServicoItemRepository = ordemServicoItemRepository;
@@ -60,6 +73,7 @@ public class TecnicoOrdemServicoService {
         this.ordemServicoItemService = ordemServicoItemService;
         this.ordemServicoAnexoService = ordemServicoAnexoService;
         this.usuarioRepository = usuarioRepository;
+        this.tipoOrdemServicoRepository = tipoOrdemServicoRepository;
     }
 
     public List<TecnicoOrdemServicoResumoDTO> listarMinhasOrdens(Usuario usuario) {
@@ -89,6 +103,43 @@ public class TecnicoOrdemServicoService {
                 .toList();
     }
 
+    public TecnicoHistoricoOrdemServicoPaginaDTO listarHistorico(
+            Usuario usuario,
+            Long osId,
+            LocalDate dataInicialConclusao,
+            LocalDate dataFinalConclusao,
+            Long tipoOrdemServicoId,
+            Integer page,
+            Integer size
+    ) {
+        Colaborador colaborador = obterColaboradorTecnico(usuario);
+        PeriodoConclusao periodo = resolverPeriodoConclusao(dataInicialConclusao, dataFinalConclusao);
+        validarFiltrosHistorico(tipoOrdemServicoId);
+        validarPaginacao(page, size);
+
+        Page<OrdemDeServico> pagina = ordemDeServicoRepository.buscarHistoricoDoTecnico(
+                colaborador.getId(),
+                osId,
+                periodo.inicio(),
+                periodo.fimExclusivo(),
+                tipoOrdemServicoId,
+                PageRequest.of(page, size)
+        );
+
+        List<TecnicoHistoricoOrdemServicoResumoDTO> conteudo = pagina.getContent()
+                .stream()
+                .map(os -> new TecnicoHistoricoOrdemServicoResumoDTO(os, colaborador.getId()))
+                .toList();
+
+        return new TecnicoHistoricoOrdemServicoPaginaDTO(
+                conteudo,
+                pagina.getTotalElements(),
+                pagina.getTotalPages(),
+                pagina.getNumber(),
+                pagina.getSize()
+        );
+    }
+
     public TecnicoOrdemServicoDetalheDTO buscarMinhaOrdemPorId(Usuario usuario, Long osId) {
         Colaborador colaborador = obterColaboradorTecnico(usuario);
         OrdemDeServico os = buscarOrdemDoTecnico(osId, colaborador);
@@ -106,6 +157,42 @@ public class TecnicoOrdemServicoService {
                 .toList();
 
         return new TecnicoOrdemServicoDetalheDTO(os, produtosUtilizados, anexos);
+    }
+
+    public TecnicoHistoricoOrdemServicoDetalheDTO buscarHistoricoPorId(Usuario usuario, Long osId) {
+        Colaborador colaborador = obterColaboradorTecnico(usuario);
+        OrdemDeServico os = ordemDeServicoRepository
+                .buscarHistoricoDoTecnicoPorId(osId, colaborador.getId())
+                .orElseThrow(() -> new ForbiddenException("Ordem de servi\u00e7o n\u00e3o pertence ao hist\u00f3rico do t\u00e9cnico autenticado."));
+
+        List<OrdemServicoItemResponseDTO> produtosUtilizados = ordemServicoItemRepository
+                .findByOrdemDeServicoId(os.getId())
+                .stream()
+                .map(OrdemServicoItemResponseDTO::new)
+                .toList();
+
+        List<OrdemServicoAnexoResponseDTO> anexos = ordemServicoAnexoRepository
+                .findByOrdemDeServicoIdOrderByDataUploadDesc(os.getId())
+                .stream()
+                .map(OrdemServicoAnexoResponseDTO::new)
+                .toList();
+
+        return new TecnicoHistoricoOrdemServicoDetalheDTO(os, colaborador.getId(), produtosUtilizados, anexos);
+    }
+
+    public OrdemServicoAnexo buscarAnexoHistorico(Usuario usuario, Long anexoId) {
+        Colaborador colaborador = obterColaboradorTecnico(usuario);
+        OrdemServicoAnexo anexo = ordemServicoAnexoService.buscarEntidadePorId(anexoId);
+
+        ordemDeServicoRepository
+                .buscarHistoricoDoTecnicoPorId(anexo.getOrdemDeServico().getId(), colaborador.getId())
+                .orElseThrow(() -> new ForbiddenException("Anexo n\u00e3o pertence ao hist\u00f3rico do t\u00e9cnico autenticado."));
+
+        return anexo;
+    }
+
+    public Resource carregarAnexo(Long anexoId) {
+        return ordemServicoAnexoService.carregarArquivo(anexoId);
     }
 
     public OrdemDeServicoResponseDTO iniciarAtendimento(Usuario usuario, Long osId) {
@@ -225,5 +312,45 @@ public class TecnicoOrdemServicoService {
     private OrdemDeServico buscarOrdemDoTecnico(Long osId, Colaborador colaborador) {
         return ordemDeServicoRepository.findByIdAndColaboradorId(osId, colaborador.getId())
                 .orElseThrow(() -> new ForbiddenException("Ordem de serviço não pertence ao técnico autenticado."));
+    }
+
+    private PeriodoConclusao resolverPeriodoConclusao(LocalDate dataInicial, LocalDate dataFinal) {
+        if (dataInicial == null && dataFinal == null) {
+            return new PeriodoConclusao(null, null);
+        }
+
+        if (dataInicial == null || dataFinal == null) {
+            throw new DatabaseException("Data inicial e data final de conclus\u00e3o devem ser informadas juntas!");
+        }
+
+        if (dataInicial.isAfter(dataFinal)) {
+            throw new DatabaseException("Data inicial de conclus\u00e3o n\u00e3o pode ser maior que a data final!");
+        }
+
+        return new PeriodoConclusao(
+                dataInicial.atStartOfDay(),
+                dataFinal.plusDays(1).atStartOfDay()
+        );
+    }
+
+    private void validarFiltrosHistorico(Long tipoOrdemServicoId) {
+        if (tipoOrdemServicoId != null && !tipoOrdemServicoRepository.existsById(tipoOrdemServicoId)) {
+            throw new ResourceNotFoundException(tipoOrdemServicoId);
+        }
+    }
+
+    private void validarPaginacao(Integer page, Integer size) {
+        if (page == null || page < 0) {
+            throw new DatabaseException("P\u00e1gina deve ser maior ou igual a zero!");
+        }
+        if (size == null || size <= 0) {
+            throw new DatabaseException("Tamanho da p\u00e1gina deve ser maior que zero!");
+        }
+        if (size > 100) {
+            throw new DatabaseException("Tamanho da p\u00e1gina deve ser no m\u00e1ximo 100!");
+        }
+    }
+
+    private record PeriodoConclusao(LocalDateTime inicio, LocalDateTime fimExclusivo) {
     }
 }

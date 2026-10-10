@@ -1,0 +1,175 @@
+package com.marlondev.stockflow.dto;
+
+import com.marlondev.stockflow.domain.OrdemDeServico;
+import com.marlondev.stockflow.domain.enums.StatusEnum;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+public class TecnicoHistoricoOrdemServicoDetalheDTO {
+
+    private Long id;
+    private LocalDate dataAbertura;
+    private StatusEnum status;
+    private String descricao;
+    private Long clienteId;
+    private String clienteNome;
+    private String clienteTelefone;
+    private String clienteEndereco;
+    private Long tecnicoResponsavelId;
+    private String tecnicoResponsavelNome;
+    private Long ajudanteId;
+    private String ajudanteNome;
+    private Long tipoOrdemServicoId;
+    private String tipoOrdemServicoNome;
+    private LocalDateTime dataAgendada;
+    private LocalDateTime inicioAtendimento;
+    private LocalDateTime fimAtendimento;
+    private String observacaoConclusao;
+    private String participacaoDoTecnico;
+    private List<OrdemServicoItemResponseDTO> produtosUtilizados;
+    private List<OrdemServicoAnexoResponseDTO> anexos;
+
+    public TecnicoHistoricoOrdemServicoDetalheDTO() {
+    }
+
+    public TecnicoHistoricoOrdemServicoDetalheDTO(
+            OrdemDeServico os,
+            Long tecnicoId,
+            List<OrdemServicoItemResponseDTO> produtosUtilizados,
+            List<OrdemServicoAnexoResponseDTO> anexos
+    ) {
+        id = os.getId();
+        dataAbertura = os.getDataAbertura();
+        status = os.getStatus();
+        descricao = os.getDescricao();
+        clienteId = os.getCliente().getId();
+        clienteNome = os.getCliente().getNome();
+        clienteTelefone = os.getCliente().getTelefone();
+        clienteEndereco = os.getCliente().getEndereco();
+        dataAgendada = os.getDataAgendada();
+        inicioAtendimento = os.getInicioAtendimento();
+        fimAtendimento = os.getFimAtendimento();
+        observacaoConclusao = os.getObservacaoConclusao();
+        this.produtosUtilizados = produtosUtilizados;
+        this.anexos = anexos;
+
+        if (os.getColaborador() != null) {
+            tecnicoResponsavelId = os.getColaborador().getId();
+            tecnicoResponsavelNome = os.getColaborador().getNome();
+        }
+
+        if (os.getAjudante() != null) {
+            ajudanteId = os.getAjudante().getId();
+            ajudanteNome = os.getAjudante().getNome();
+        }
+
+        if (os.getTipoOrdemServico() != null) {
+            tipoOrdemServicoId = os.getTipoOrdemServico().getId();
+            tipoOrdemServicoNome = os.getTipoOrdemServico().getNome();
+        }
+
+        participacaoDoTecnico = resolverParticipacao(tecnicoId);
+    }
+
+    private String resolverParticipacao(Long tecnicoId) {
+        boolean responsavel = tecnicoId != null && tecnicoId.equals(tecnicoResponsavelId);
+        boolean ajudante = tecnicoId != null && tecnicoId.equals(ajudanteId);
+
+        if (responsavel && ajudante) {
+            return "RESPONSAVEL_E_AJUDANTE";
+        }
+        if (responsavel) {
+            return "RESPONSAVEL";
+        }
+        if (ajudante) {
+            return "AJUDANTE";
+        }
+        return null;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public LocalDate getDataAbertura() {
+        return dataAbertura;
+    }
+
+    public StatusEnum getStatus() {
+        return status;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public Long getClienteId() {
+        return clienteId;
+    }
+
+    public String getClienteNome() {
+        return clienteNome;
+    }
+
+    public String getClienteTelefone() {
+        return clienteTelefone;
+    }
+
+    public String getClienteEndereco() {
+        return clienteEndereco;
+    }
+
+    public Long getTecnicoResponsavelId() {
+        return tecnicoResponsavelId;
+    }
+
+    public String getTecnicoResponsavelNome() {
+        return tecnicoResponsavelNome;
+    }
+
+    public Long getAjudanteId() {
+        return ajudanteId;
+    }
+
+    public String getAjudanteNome() {
+        return ajudanteNome;
+    }
+
+    public Long getTipoOrdemServicoId() {
+        return tipoOrdemServicoId;
+    }
+
+    public String getTipoOrdemServicoNome() {
+        return tipoOrdemServicoNome;
+    }
+
+    public LocalDateTime getDataAgendada() {
+        return dataAgendada;
+    }
+
+    public LocalDateTime getInicioAtendimento() {
+        return inicioAtendimento;
+    }
+
+    public LocalDateTime getFimAtendimento() {
+        return fimAtendimento;
+    }
+
+    public String getObservacaoConclusao() {
+        return observacaoConclusao;
+    }
+
+    public String getParticipacaoDoTecnico() {
+        return participacaoDoTecnico;
+    }
+
+    public List<OrdemServicoItemResponseDTO> getProdutosUtilizados() {
+        return produtosUtilizados;
+    }
+
+    public List<OrdemServicoAnexoResponseDTO> getAnexos() {
+        return anexos;
+    }
+}

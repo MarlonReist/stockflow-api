@@ -37,6 +37,68 @@ public interface OrdemDeServicoRepository extends JpaRepository<OrdemDeServico, 
     Optional<OrdemDeServico> findByIdAndColaboradorId(Long id, Long colaboradorId);
 
     @Query("""
+            SELECT os
+            FROM OrdemDeServico os
+            JOIN FETCH os.cliente
+            LEFT JOIN FETCH os.tipoOrdemServico
+            LEFT JOIN FETCH os.colaborador
+            LEFT JOIN FETCH os.ajudante
+            WHERE os.id = :id
+              AND os.fimAtendimento IS NOT NULL
+              AND (
+                    os.colaborador.id = :tecnicoId
+                    OR os.ajudante.id = :tecnicoId
+              )
+            """)
+    Optional<OrdemDeServico> buscarHistoricoDoTecnicoPorId(
+            @Param("id") Long id,
+            @Param("tecnicoId") Long tecnicoId
+    );
+
+    @Query(value = """
+            SELECT os
+            FROM OrdemDeServico os
+            JOIN os.cliente cliente
+            LEFT JOIN os.tipoOrdemServico tipo
+            LEFT JOIN os.colaborador responsavel
+            LEFT JOIN os.ajudante ajudante
+            WHERE os.fimAtendimento IS NOT NULL
+              AND (:osId IS NULL OR os.id = :osId)
+              AND (:inicioConclusao IS NULL OR os.fimAtendimento >= :inicioConclusao)
+              AND (:fimConclusaoExclusivo IS NULL OR os.fimAtendimento < :fimConclusaoExclusivo)
+              AND (:tipoOrdemServicoId IS NULL OR tipo.id = :tipoOrdemServicoId)
+              AND (
+                    responsavel.id = :tecnicoId
+                    OR ajudante.id = :tecnicoId
+              )
+            ORDER BY os.fimAtendimento DESC, os.id DESC
+            """,
+            countQuery = """
+            SELECT COUNT(os)
+            FROM OrdemDeServico os
+            LEFT JOIN os.tipoOrdemServico tipo
+            LEFT JOIN os.colaborador responsavel
+            LEFT JOIN os.ajudante ajudante
+            WHERE os.fimAtendimento IS NOT NULL
+              AND (:osId IS NULL OR os.id = :osId)
+              AND (:inicioConclusao IS NULL OR os.fimAtendimento >= :inicioConclusao)
+              AND (:fimConclusaoExclusivo IS NULL OR os.fimAtendimento < :fimConclusaoExclusivo)
+              AND (:tipoOrdemServicoId IS NULL OR tipo.id = :tipoOrdemServicoId)
+              AND (
+                    responsavel.id = :tecnicoId
+                    OR ajudante.id = :tecnicoId
+              )
+            """)
+    Page<OrdemDeServico> buscarHistoricoDoTecnico(
+            @Param("tecnicoId") Long tecnicoId,
+            @Param("osId") Long osId,
+            @Param("inicioConclusao") LocalDateTime inicioConclusao,
+            @Param("fimConclusaoExclusivo") LocalDateTime fimConclusaoExclusivo,
+            @Param("tipoOrdemServicoId") Long tipoOrdemServicoId,
+            Pageable pageable
+    );
+
+    @Query("""
             SELECT COUNT(os)
             FROM OrdemDeServico os
             WHERE os.fimAtendimento >= :inicio

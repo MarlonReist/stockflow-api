@@ -20,6 +20,7 @@ public class OrdemServicoItemResponseDTO implements Serializable {
     @JsonFormat(shape = JsonFormat.Shape.NUMBER, pattern = "#.00")
     private Double valorTotal;
     private Long almoxarifadoId;
+    private String almoxarifadoNome;
 
     public OrdemServicoItemResponseDTO() {
     }
@@ -33,6 +34,7 @@ public class OrdemServicoItemResponseDTO implements Serializable {
         valorUnitario = ordemItem.getValorUnitario();
         valorTotal = ordemItem.valorTotal();
         almoxarifadoId = ordemItem.getAlmoxarifado().getId();
+        almoxarifadoNome = ordemItem.getAlmoxarifado().getNome();
     }
 
     public Long getId() {
@@ -97,5 +99,13 @@ public class OrdemServicoItemResponseDTO implements Serializable {
 
     public void setAlmoxarifadoId(Long almoxarifadoId) {
         this.almoxarifadoId = almoxarifadoId;
+    }
+
+    public String getAlmoxarifadoNome() {
+        return almoxarifadoNome;
+    }
+
+    public void setAlmoxarifadoNome(String almoxarifadoNome) {
+        this.almoxarifadoNome = almoxarifadoNome;
     }
 }

@@ -1,17 +1,24 @@
 package com.marlondev.stockflow.controller;
 
+import com.marlondev.stockflow.domain.OrdemServicoAnexo;
 import com.marlondev.stockflow.dto.OrdemDeServicoConclusaoAtendimentoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
 import com.marlondev.stockflow.dto.OrdemServicoAnexoResponseDTO;
 import com.marlondev.stockflow.dto.OrdemServicoItemResponseDTO;
 import com.marlondev.stockflow.dto.TecnicoAjudanteRequestDTO;
 import com.marlondev.stockflow.dto.TecnicoAjudanteResponseDTO;
+import com.marlondev.stockflow.dto.TecnicoHistoricoOrdemServicoDetalheDTO;
+import com.marlondev.stockflow.dto.TecnicoHistoricoOrdemServicoPaginaDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoDetalheDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoItemRequestDTO;
 import com.marlondev.stockflow.dto.TecnicoOrdemServicoResumoDTO;
 import com.marlondev.stockflow.security.UsuarioDetails;
 import com.marlondev.stockflow.services.TecnicoOrdemServicoService;
 import jakarta.validation.Valid;
+import org.springframework.core.io.Resource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +34,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -57,6 +66,61 @@ public class TecnicoOrdemServicoController {
                 tecnicoOrdemServicoService.listarPossiveisAjudantes(usuarioDetails.getUsuario());
 
         return ResponseEntity.ok().body(ajudantes);
+    }
+
+    @GetMapping(value = "/historico")
+    public ResponseEntity<TecnicoHistoricoOrdemServicoPaginaDTO> listarHistorico(
+            @AuthenticationPrincipal UsuarioDetails usuarioDetails,
+            @RequestParam(required = false) Long osId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicialConclusao,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFinalConclusao,
+            @RequestParam(required = false) Long tipoOrdemServicoId,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size
+    ) {
+        TecnicoHistoricoOrdemServicoPaginaDTO historico =
+                tecnicoOrdemServicoService.listarHistorico(
+                        usuarioDetails.getUsuario(),
+                        osId,
+                        dataInicialConclusao,
+                        dataFinalConclusao,
+                        tipoOrdemServicoId,
+                        page,
+                        size
+                );
+
+        return ResponseEntity.ok().body(historico);
+    }
+
+    @GetMapping(value = "/historico/{id}")
+    public ResponseEntity<TecnicoHistoricoOrdemServicoDetalheDTO> buscarHistoricoPorId(
+            @AuthenticationPrincipal UsuarioDetails usuarioDetails,
+            @PathVariable Long id
+    ) {
+        TecnicoHistoricoOrdemServicoDetalheDTO ordem =
+                tecnicoOrdemServicoService.buscarHistoricoPorId(usuarioDetails.getUsuario(), id);
+
+        return ResponseEntity.ok().body(ordem);
+    }
+
+    @GetMapping(value = "/historico/anexos/{anexoId}/arquivo")
+    public ResponseEntity<Resource> baixarAnexoHistorico(
+            @AuthenticationPrincipal UsuarioDetails usuarioDetails,
+            @PathVariable Long anexoId
+    ) {
+        OrdemServicoAnexo anexo =
+                tecnicoOrdemServicoService.buscarAnexoHistorico(usuarioDetails.getUsuario(), anexoId);
+        Resource arquivo = tecnicoOrdemServicoService.carregarAnexo(anexo.getId());
+
+        MediaType mediaType = MediaType.parseMediaType(anexo.getContentType());
+        ContentDisposition contentDisposition = ContentDisposition.inline()
+                .filename(anexo.getNomeOriginal(), StandardCharsets.UTF_8)
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
+                .body(arquivo);
     }
 
     @GetMapping(value = "/os/{id}")
