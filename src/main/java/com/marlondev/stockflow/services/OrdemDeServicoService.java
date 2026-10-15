@@ -165,8 +165,10 @@ public class OrdemDeServicoService {
         OrdemDeServico osExistente = ordemDeServicoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
 
-        if (osExistente.getStatus() != StatusEnum.ABERTA) {
-            throw new DatabaseException("Ordem de serviço precisa estar aberta para ser agendada!");
+        if (osExistente.getStatus() != StatusEnum.ABERTA
+                && osExistente.getStatus() != StatusEnum.AGENDADA) {
+            throw new DatabaseException(
+                    "Ordem de serviço precisa estar aberta ou agendada para atualizar o agendamento!");
         }
 
         Colaborador colaboradorEncontrado = colaboradorRepository.findById(dto.getColaboradorId())

@@ -57,7 +57,8 @@ public class TipoOrdemServico implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass())
+            return false;
         TipoOrdemServico that = (TipoOrdemServico) o;
         return Objects.equals(id, that.id);
     }

@@ -76,7 +76,11 @@ class OrdemDeServicoRoteadorServiceTest {
 
         service.concluirAtendimento(1L, dto, new Usuario());
 
-        verify(roteadorService).atualizar(os.getCliente(), dto.getRoteadorPrincipal(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.same(os));
+        verify(roteadorService).atualizar(
+                org.mockito.ArgumentMatchers.same(os.getCliente()),
+                org.mockito.ArgumentMatchers.same(dto.getRoteadorPrincipal()),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.same(os));
     }
 
     @Test

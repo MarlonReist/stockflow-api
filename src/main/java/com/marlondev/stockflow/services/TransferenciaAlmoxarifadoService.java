@@ -23,21 +23,22 @@ public class TransferenciaAlmoxarifadoService {
     public final AlmoxarifadoRepository almoxarifadoRepository;
     public final TransferenciaItemRepository transferenciaRepository;
 
-    public TransferenciaAlmoxarifadoService(TransferenciaAlmoxarifadoRepository transferenciaAlmoxarifadoRepository, AlmoxarifadoRepository almoxarifadoRepository, TransferenciaItemRepository transferenciaRepository) {
+    public TransferenciaAlmoxarifadoService(TransferenciaAlmoxarifadoRepository transferenciaAlmoxarifadoRepository,
+            AlmoxarifadoRepository almoxarifadoRepository, TransferenciaItemRepository transferenciaRepository) {
         this.transferenciaAlmoxarifadoRepository = transferenciaAlmoxarifadoRepository;
         this.almoxarifadoRepository = almoxarifadoRepository;
         this.transferenciaRepository = transferenciaRepository;
     }
 
     @Transactional
-    public TransferenciaAlmoxarifadoResponseDTO salvar(TransferenciaAlmoxarifadoRequestDTO dto){
+    public TransferenciaAlmoxarifadoResponseDTO salvar(TransferenciaAlmoxarifadoRequestDTO dto) {
         Almoxarifado almoxarifadoOrigem = almoxarifadoRepository.findById(dto.getAlmoxarifadoOrigemId())
                 .orElseThrow(() -> new ResourceNotFoundException(dto.getAlmoxarifadoOrigemId()));
 
         Almoxarifado almoxarifadoDestino = almoxarifadoRepository.findById(dto.getAlmoxarifadoDestinoId())
                 .orElseThrow(() -> new ResourceNotFoundException(dto.getAlmoxarifadoDestinoId()));
 
-        if (almoxarifadoOrigem.getId().equals(almoxarifadoDestino.getId())){
+        if (almoxarifadoOrigem.getId().equals(almoxarifadoDestino.getId())) {
             throw new DatabaseException("Almoxarifado Origem e Destino não podem ser o mesmo!");
         }
 
@@ -50,17 +51,17 @@ public class TransferenciaAlmoxarifadoService {
         return new TransferenciaAlmoxarifadoResponseDTO(transfSalva);
     }
 
-    public TransferenciaAlmoxarifadoResponseDTO buscarPorId(Long id){
+    public TransferenciaAlmoxarifadoResponseDTO buscarPorId(Long id) {
         TransferenciaAlmoxarifado buscarTransf = transferenciaAlmoxarifadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
         return new TransferenciaAlmoxarifadoResponseDTO(buscarTransf);
     }
 
     @Transactional
-    public void deletarPorId(Long id){
+    public void deletarPorId(Long id) {
         TransferenciaAlmoxarifado buscarTransf = transferenciaAlmoxarifadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
-        if(transferenciaRepository.existsByTransferenciaId(id)){
+        if (transferenciaRepository.existsByTransferenciaId(id)) {
             throw new DatabaseException("Não é possível excluir uma transferência com produtos!");
         }
         transferenciaAlmoxarifadoRepository.deleteById(id);

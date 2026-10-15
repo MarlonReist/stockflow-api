@@ -34,21 +34,71 @@ public class RoteadorPrincipalHistorico {
     @JoinColumn(name = "ordem_de_servico_id")
     private OrdemDeServico ordemDeServico;
 
-    public Long getId() { return id; }
-    public Cliente getCliente() { return cliente; }
-    public void setCliente(Cliente cliente) { this.cliente = cliente; }
-    public String getModeloAnterior() { return modeloAnterior; }
-    public void setModeloAnterior(String modeloAnterior) { this.modeloAnterior = modeloAnterior; }
-    public PropriedadeRoteadorEnum getPropriedadeAnterior() { return propriedadeAnterior; }
-    public void setPropriedadeAnterior(PropriedadeRoteadorEnum propriedadeAnterior) { this.propriedadeAnterior = propriedadeAnterior; }
-    public String getModeloNovo() { return modeloNovo; }
-    public void setModeloNovo(String modeloNovo) { this.modeloNovo = modeloNovo; }
-    public PropriedadeRoteadorEnum getPropriedadeNova() { return propriedadeNova; }
-    public void setPropriedadeNova(PropriedadeRoteadorEnum propriedadeNova) { this.propriedadeNova = propriedadeNova; }
-    public LocalDateTime getDataAlteracao() { return dataAlteracao; }
-    public void setDataAlteracao(LocalDateTime dataAlteracao) { this.dataAlteracao = dataAlteracao; }
-    public Usuario getUsuario() { return usuario; }
-    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
-    public OrdemDeServico getOrdemDeServico() { return ordemDeServico; }
-    public void setOrdemDeServico(OrdemDeServico ordemDeServico) { this.ordemDeServico = ordemDeServico; }
+    public Long getId() {
+        return id;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
+    }
+
+    public String getModeloAnterior() {
+        return modeloAnterior;
+    }
+
+    public void setModeloAnterior(String modeloAnterior) {
+        this.modeloAnterior = modeloAnterior;
+    }
+
+    public PropriedadeRoteadorEnum getPropriedadeAnterior() {
+        return propriedadeAnterior;
+    }
+
+    public void setPropriedadeAnterior(PropriedadeRoteadorEnum propriedadeAnterior) {
+        this.propriedadeAnterior = propriedadeAnterior;
+    }
+
+    public String getModeloNovo() {
+        return modeloNovo;
+    }
+
+    public void setModeloNovo(String modeloNovo) {
+        this.modeloNovo = modeloNovo;
+    }
+
+    public PropriedadeRoteadorEnum getPropriedadeNova() {
+        return propriedadeNova;
+    }
+
+    public void setPropriedadeNova(PropriedadeRoteadorEnum propriedadeNova) {
+        this.propriedadeNova = propriedadeNova;
+    }
+
+    public LocalDateTime getDataAlteracao() {
+        return dataAlteracao;
+    }
+
+    public void setDataAlteracao(LocalDateTime dataAlteracao) {
+        this.dataAlteracao = dataAlteracao;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    public OrdemDeServico getOrdemDeServico() {
+        return ordemDeServico;
+    }
+
+    public void setOrdemDeServico(OrdemDeServico ordemDeServico) {
+        this.ordemDeServico = ordemDeServico;
+    }
 }
