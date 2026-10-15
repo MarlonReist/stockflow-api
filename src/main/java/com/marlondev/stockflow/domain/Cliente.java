@@ -1,11 +1,13 @@
 package com.marlondev.stockflow.domain;
 
 import com.marlondev.stockflow.domain.enums.TipoPessoaEnum;
+import com.marlondev.stockflow.domain.enums.PropriedadeRoteadorEnum;
 import jakarta.persistence.*;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Table (name = "cliente") // indico o nome da tabela
@@ -27,6 +29,15 @@ public class Cliente implements Serializable {
     private String email;
     private LocalDate dataCadastro;
     private String endereco;
+    @Column(length = 150)
+    private String modeloRoteadorPrincipal;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private PropriedadeRoteadorEnum propriedadeRoteadorPrincipal;
+    private LocalDateTime dataAtualizacaoRoteador;
+    @ManyToOne
+    @JoinColumn(name = "usuario_atualizacao_roteador_id")
+    private Usuario usuarioAtualizacaoRoteador;
 
     public Cliente(){
     }
@@ -121,6 +132,15 @@ public class Cliente implements Serializable {
     public void setEndereco(String endereco) {
         this.endereco = endereco;
     }
+
+    public String getModeloRoteadorPrincipal() { return modeloRoteadorPrincipal; }
+    public void setModeloRoteadorPrincipal(String modeloRoteadorPrincipal) { this.modeloRoteadorPrincipal = modeloRoteadorPrincipal; }
+    public PropriedadeRoteadorEnum getPropriedadeRoteadorPrincipal() { return propriedadeRoteadorPrincipal; }
+    public void setPropriedadeRoteadorPrincipal(PropriedadeRoteadorEnum propriedadeRoteadorPrincipal) { this.propriedadeRoteadorPrincipal = propriedadeRoteadorPrincipal; }
+    public LocalDateTime getDataAtualizacaoRoteador() { return dataAtualizacaoRoteador; }
+    public void setDataAtualizacaoRoteador(LocalDateTime dataAtualizacaoRoteador) { this.dataAtualizacaoRoteador = dataAtualizacaoRoteador; }
+    public Usuario getUsuarioAtualizacaoRoteador() { return usuarioAtualizacaoRoteador; }
+    public void setUsuarioAtualizacaoRoteador(Usuario usuarioAtualizacaoRoteador) { this.usuarioAtualizacaoRoteador = usuarioAtualizacaoRoteador; }
 
     @Override
     public boolean equals(Object o) {

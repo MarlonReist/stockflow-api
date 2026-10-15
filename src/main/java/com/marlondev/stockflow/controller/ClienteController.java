@@ -2,11 +2,16 @@ package com.marlondev.stockflow.controller;
 
 import com.marlondev.stockflow.dto.ClienteRequestDTO;
 import com.marlondev.stockflow.dto.ClienteResponseDTO;
+import com.marlondev.stockflow.dto.RoteadorPrincipalRequestDTO;
+import com.marlondev.stockflow.dto.RoteadorPrincipalHistoricoResponseDTO;
+import com.marlondev.stockflow.dto.ModeloRoteadorSugestaoResponseDTO;
+import com.marlondev.stockflow.security.UsuarioDetails;
 import com.marlondev.stockflow.services.ClienteService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 
@@ -32,6 +37,14 @@ public class ClienteController {
         return ResponseEntity.ok(obj);
     }
 
+    @GetMapping(value = "/roteador-principal/sugestoes")
+    public ResponseEntity<List<ModeloRoteadorSugestaoResponseDTO>> buscarSugestoesRoteador(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "10") Integer limite
+    ) {
+        return ResponseEntity.ok(clienteService.buscarSugestoesRoteador(q, limite));
+    }
+
     @DeleteMapping (value = "/{id}")
     public ResponseEntity<Void> deletarClientePorId(@PathVariable Long id){
         clienteService.deletarClientePorId(id);
@@ -47,5 +60,19 @@ public class ClienteController {
     public ResponseEntity<ClienteResponseDTO> atualizarCliente(@PathVariable Long id, @RequestBody @Valid ClienteRequestDTO dto) {
         ClienteResponseDTO dtoAtualizado = clienteService.atualizarCliente(id, dto);
         return ResponseEntity.ok(dtoAtualizado);
+    }
+
+    @PutMapping(value = "/{id}/roteador-principal")
+    public ResponseEntity<ClienteResponseDTO> atualizarRoteadorPrincipal(
+            @PathVariable Long id,
+            @RequestBody @Valid RoteadorPrincipalRequestDTO dto,
+            @AuthenticationPrincipal UsuarioDetails usuarioDetails
+    ) {
+        return ResponseEntity.ok(clienteService.atualizarRoteadorPrincipal(id, dto, usuarioDetails.getUsuario()));
+    }
+
+    @GetMapping(value = "/{id}/roteador-principal/historico")
+    public ResponseEntity<List<RoteadorPrincipalHistoricoResponseDTO>> listarHistoricoRoteador(@PathVariable Long id) {
+        return ResponseEntity.ok(clienteService.listarHistoricoRoteador(id));
     }
 }

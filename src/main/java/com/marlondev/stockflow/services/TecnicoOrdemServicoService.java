@@ -210,7 +210,7 @@ public class TecnicoOrdemServicoService {
         Colaborador colaborador = obterColaboradorTecnico(usuario);
         buscarOrdemDoTecnico(osId, colaborador);
 
-        return ordemDeServicoService.concluirAtendimento(osId, dto);
+        return ordemDeServicoService.concluirAtendimento(osId, dto, usuario);
     }
 
     public OrdemServicoItemResponseDTO adicionarProdutoUtilizado(

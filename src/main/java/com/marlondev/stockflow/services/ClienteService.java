@@ -3,6 +3,10 @@ package com.marlondev.stockflow.services;
 import com.marlondev.stockflow.domain.Cliente;
 import com.marlondev.stockflow.dto.ClienteRequestDTO;
 import com.marlondev.stockflow.dto.ClienteResponseDTO;
+import com.marlondev.stockflow.dto.ModeloRoteadorSugestaoResponseDTO;
+import com.marlondev.stockflow.dto.RoteadorPrincipalHistoricoResponseDTO;
+import com.marlondev.stockflow.dto.RoteadorPrincipalRequestDTO;
+import com.marlondev.stockflow.domain.Usuario;
 import com.marlondev.stockflow.repositories.ClienteRepository;
 import com.marlondev.stockflow.domain.enums.TipoPessoaEnum;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
@@ -19,10 +23,12 @@ import java.util.stream.Collectors;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final RoteadorPrincipalService roteadorPrincipalService;
 
 
-    public ClienteService(ClienteRepository clienteRepository) {
+    public ClienteService(ClienteRepository clienteRepository, RoteadorPrincipalService roteadorPrincipalService) {
         this.clienteRepository = clienteRepository;
+        this.roteadorPrincipalService = roteadorPrincipalService;
     }
 
     private void validarCliente(ClienteRequestDTO dto, Long idAtual) {
@@ -159,5 +165,22 @@ public class ClienteService {
 
         Cliente clienteSalvo = clienteRepository.save(existente);
         return new ClienteResponseDTO(clienteSalvo);
+    }
+
+    @Transactional
+    public ClienteResponseDTO atualizarRoteadorPrincipal(Long id, RoteadorPrincipalRequestDTO dto, Usuario usuario) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+        roteadorPrincipalService.atualizar(cliente, dto, usuario, null);
+        return new ClienteResponseDTO(clienteRepository.save(cliente));
+    }
+
+    public List<RoteadorPrincipalHistoricoResponseDTO> listarHistoricoRoteador(Long id) {
+        buscarPorId(id);
+        return roteadorPrincipalService.listarHistorico(id);
+    }
+
+    public List<ModeloRoteadorSugestaoResponseDTO> buscarSugestoesRoteador(String consulta, Integer limite) {
+        return roteadorPrincipalService.buscarSugestoes(consulta, limite);
     }
 }

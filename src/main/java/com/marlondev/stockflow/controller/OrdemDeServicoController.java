@@ -7,11 +7,13 @@ import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoTipoRequestDTO;
 import com.marlondev.stockflow.services.OrdemDeServicoService;
 import com.marlondev.stockflow.services.PdfService;
+import com.marlondev.stockflow.security.UsuarioDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 
@@ -116,9 +118,10 @@ public class OrdemDeServicoController {
     @PatchMapping(value = "/{id}/concluir-atendimento")
     public ResponseEntity<OrdemDeServicoResponseDTO> concluirAtendimento(
             @PathVariable Long id,
-            @RequestBody @Valid OrdemDeServicoConclusaoAtendimentoRequestDTO dto
+            @RequestBody @Valid OrdemDeServicoConclusaoAtendimentoRequestDTO dto,
+            @AuthenticationPrincipal UsuarioDetails usuarioDetails
     ) {
-        OrdemDeServicoResponseDTO osAguardandoConferencia = osService.concluirAtendimento(id, dto);
+        OrdemDeServicoResponseDTO osAguardandoConferencia = osService.concluirAtendimento(id, dto, usuarioDetails.getUsuario());
         return ResponseEntity.ok().body(osAguardandoConferencia);
     }
 }

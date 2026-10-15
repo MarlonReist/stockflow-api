@@ -2,6 +2,7 @@ package com.marlondev.stockflow.dto;
 
 import com.marlondev.stockflow.domain.OrdemDeServico;
 import com.marlondev.stockflow.domain.enums.StatusEnum;
+import com.marlondev.stockflow.domain.enums.PropriedadeRoteadorEnum;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +26,9 @@ public class TecnicoOrdemServicoDetalheDTO {
     private LocalDateTime inicioAtendimento;
     private LocalDateTime fimAtendimento;
     private String observacaoConclusao;
+    private String modeloRoteadorPrincipal;
+    private PropriedadeRoteadorEnum propriedadeRoteadorPrincipal;
+    private LocalDateTime dataAtualizacaoRoteador;
     private List<OrdemServicoItemResponseDTO> produtosUtilizados;
     private List<OrdemServicoAnexoResponseDTO> anexos;
 
@@ -52,6 +56,9 @@ public class TecnicoOrdemServicoDetalheDTO {
         inicioAtendimento = os.getInicioAtendimento();
         fimAtendimento = os.getFimAtendimento();
         observacaoConclusao = os.getObservacaoConclusao();
+        modeloRoteadorPrincipal = os.getCliente().getModeloRoteadorPrincipal();
+        propriedadeRoteadorPrincipal = os.getCliente().getPropriedadeRoteadorPrincipal();
+        dataAtualizacaoRoteador = os.getCliente().getDataAtualizacaoRoteador();
         this.produtosUtilizados = produtosUtilizados;
         this.anexos = anexos;
 
@@ -124,6 +131,10 @@ public class TecnicoOrdemServicoDetalheDTO {
     public String getObservacaoConclusao() {
         return observacaoConclusao;
     }
+
+    public String getModeloRoteadorPrincipal() { return modeloRoteadorPrincipal; }
+    public PropriedadeRoteadorEnum getPropriedadeRoteadorPrincipal() { return propriedadeRoteadorPrincipal; }
+    public LocalDateTime getDataAtualizacaoRoteador() { return dataAtualizacaoRoteador; }
 
     public List<OrdemServicoItemResponseDTO> getProdutosUtilizados() {
         return produtosUtilizados;

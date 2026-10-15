@@ -2,10 +2,12 @@ package com.marlondev.stockflow.dto;
 
 import com.marlondev.stockflow.domain.Cliente;
 import com.marlondev.stockflow.domain.enums.TipoPessoaEnum;
+import com.marlondev.stockflow.domain.enums.PropriedadeRoteadorEnum;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ClienteResponseDTO implements Serializable {
     @Serial
@@ -21,6 +23,11 @@ public class ClienteResponseDTO implements Serializable {
     private String email;
     private LocalDate dataCadastro;
     private String endereco;
+    private String modeloRoteadorPrincipal;
+    private PropriedadeRoteadorEnum propriedadeRoteadorPrincipal;
+    private LocalDateTime dataAtualizacaoRoteador;
+    private Long usuarioAtualizacaoRoteadorId;
+    private String usuarioAtualizacaoRoteadorNome;
 
     public ClienteResponseDTO(){
     }
@@ -36,6 +43,13 @@ public class ClienteResponseDTO implements Serializable {
         dataCadastro = cliente.getDataCadastro();
         endereco = cliente.getEndereco();
         responsavelContato = cliente.getResponsavelContato();
+        modeloRoteadorPrincipal = cliente.getModeloRoteadorPrincipal();
+        propriedadeRoteadorPrincipal = cliente.getPropriedadeRoteadorPrincipal();
+        dataAtualizacaoRoteador = cliente.getDataAtualizacaoRoteador();
+        if (cliente.getUsuarioAtualizacaoRoteador() != null) {
+            usuarioAtualizacaoRoteadorId = cliente.getUsuarioAtualizacaoRoteador().getId();
+            usuarioAtualizacaoRoteadorNome = cliente.getUsuarioAtualizacaoRoteador().getNome();
+        }
     }
 
     public Long getId() {
@@ -117,4 +131,10 @@ public class ClienteResponseDTO implements Serializable {
     public void setEndereco(String endereco) {
         this.endereco = endereco;
     }
+
+    public String getModeloRoteadorPrincipal() { return modeloRoteadorPrincipal; }
+    public PropriedadeRoteadorEnum getPropriedadeRoteadorPrincipal() { return propriedadeRoteadorPrincipal; }
+    public LocalDateTime getDataAtualizacaoRoteador() { return dataAtualizacaoRoteador; }
+    public Long getUsuarioAtualizacaoRoteadorId() { return usuarioAtualizacaoRoteadorId; }
+    public String getUsuarioAtualizacaoRoteadorNome() { return usuarioAtualizacaoRoteadorNome; }
 }

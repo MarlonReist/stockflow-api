@@ -11,6 +11,7 @@ import com.marlondev.stockflow.dto.OrdemDeServicoDescricaoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoRequestDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoResponseDTO;
 import com.marlondev.stockflow.dto.OrdemDeServicoTipoRequestDTO;
+import com.marlondev.stockflow.domain.Usuario;
 import com.marlondev.stockflow.repositories.ClienteRepository;
 import com.marlondev.stockflow.repositories.ColaboradorRepository;
 import com.marlondev.stockflow.repositories.OrdemDeServicoRepository;
@@ -33,12 +34,14 @@ public class OrdemDeServicoService {
     private final ClienteRepository clienteRepository;
     private final ColaboradorRepository colaboradorRepository;
     private final TipoOrdemServicoRepository tipoOrdemServicoRepository;
+    private final RoteadorPrincipalService roteadorPrincipalService;
 
-    public OrdemDeServicoService(OrdemDeServicoRepository ordemDeServicoRepository, ClienteRepository clienteRepository, ColaboradorRepository colaboradorRepository, TipoOrdemServicoRepository tipoOrdemServicoRepository) {
+    public OrdemDeServicoService(OrdemDeServicoRepository ordemDeServicoRepository, ClienteRepository clienteRepository, ColaboradorRepository colaboradorRepository, TipoOrdemServicoRepository tipoOrdemServicoRepository, RoteadorPrincipalService roteadorPrincipalService) {
         this.ordemDeServicoRepository = ordemDeServicoRepository;
         this.clienteRepository = clienteRepository;
         this.colaboradorRepository = colaboradorRepository;
         this.tipoOrdemServicoRepository = tipoOrdemServicoRepository;
+        this.roteadorPrincipalService = roteadorPrincipalService;
     }
 
     @Transactional
@@ -194,12 +197,26 @@ public class OrdemDeServicoService {
     }
 
     @Transactional
-    public OrdemDeServicoResponseDTO concluirAtendimento(Long id, OrdemDeServicoConclusaoAtendimentoRequestDTO dto) {
+    public OrdemDeServicoResponseDTO concluirAtendimento(Long id, OrdemDeServicoConclusaoAtendimentoRequestDTO dto, Usuario usuarioResponsavel) {
         OrdemDeServico osExistente = ordemDeServicoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
 
         if (osExistente.getStatus() != StatusEnum.EM_ATENDIMENTO) {
             throw new DatabaseException("Ordem de serviço precisa estar em atendimento para ser concluída!");
+        }
+
+        if (!roteadorPrincipalService.possuiRoteadorPrincipal(osExistente.getCliente())
+                && dto.getRoteadorPrincipal() == null) {
+            throw new DatabaseException("Modelo e propriedade do roteador principal são obrigatórios antes de concluir o atendimento!");
+        }
+
+        if (dto.getRoteadorPrincipal() != null) {
+            roteadorPrincipalService.atualizar(
+                    osExistente.getCliente(),
+                    dto.getRoteadorPrincipal(),
+                    usuarioResponsavel,
+                    osExistente
+            );
         }
 
         osExistente.setFimAtendimento(LocalDateTime.now());
