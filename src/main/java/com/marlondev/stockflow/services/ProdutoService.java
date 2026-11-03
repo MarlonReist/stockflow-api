@@ -5,6 +5,7 @@ import com.marlondev.stockflow.domain.Produto;
 import com.marlondev.stockflow.dto.ProdutoRequestDTO;
 import com.marlondev.stockflow.dto.ProdutoResponseDTO;
 import com.marlondev.stockflow.repositories.CategoriaRepository;
+import com.marlondev.stockflow.repositories.MovimentacaoEstoqueRepository;
 import com.marlondev.stockflow.repositories.ProdutoRepository;
 import com.marlondev.stockflow.services.exceptions.DatabaseException;
 import com.marlondev.stockflow.services.exceptions.ResourceNotFoundException;
@@ -19,10 +20,13 @@ public class ProdutoService {
 
     private final ProdutoRepository produtoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
 
-    public ProdutoService(ProdutoRepository produtoRepository, CategoriaRepository categoriaRepository) {
+    public ProdutoService(ProdutoRepository produtoRepository, CategoriaRepository categoriaRepository,
+                          MovimentacaoEstoqueRepository movimentacaoEstoqueRepository) {
         this.produtoRepository = produtoRepository;
         this.categoriaRepository = categoriaRepository;
+        this.movimentacaoEstoqueRepository = movimentacaoEstoqueRepository;
     }
 
     @Transactional
@@ -51,6 +55,9 @@ public class ProdutoService {
 
     public void deletarProdutoPorId(Long id) {
         buscarPorId(id);
+        if (movimentacaoEstoqueRepository.existsByProdutoId(id)) {
+            throw new DatabaseException("N\u00e3o \u00e9 poss\u00edvel excluir este produto porque ele possui movimenta\u00e7\u00f5es registradas.");
+        }
         produtoRepository.deleteById(id);
     }
 

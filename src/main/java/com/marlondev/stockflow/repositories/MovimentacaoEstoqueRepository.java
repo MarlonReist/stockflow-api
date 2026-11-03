@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface MovimentacaoEstoqueRepository extends JpaRepository<MovimentacaoEstoque, Long> {
 
+    boolean existsByProdutoId(Long produtoId);
+
     long countByDataMovimentacaoBetween(LocalDate dataInicial, LocalDate dataFinal);
 
     List<MovimentacaoEstoque> findTop5ByOrderByDataMovimentacaoDescIdDesc();
