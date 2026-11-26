@@ -1,0 +1,44 @@
+name: Esteira de CI - StockFlow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  testes-unitarios:
+    name: Testes Unitários (JUnit 5)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Garantir permissão do Maven Wrapper
+        run: chmod +x mvnw
+
+      - name: Executar suíte de testes
+        run: ./mvnw test
+
+  semgrep:
+    name: Análise Estática SAST (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Executar Semgrep (Java e OWASP Top Ten)
+        run: semgrep scan --config p/java --config p/owasp-top-ten --severity ERROR --error
